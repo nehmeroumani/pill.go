@@ -1,0 +1,146 @@
+package auth
+
+import (
+	"bufio"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
+	"os"
+	"strconv"
+	"time"
+
+	jwt "github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/bcrypt"
+)
+
+type JWTAuthentication struct {
+	privateKey *rsa.PrivateKey
+	publicKey  *rsa.PublicKey
+}
+
+var (
+	tokenDuration  time.Duration = 72
+	expireOffset   time.Duration = 3600
+	privateKeyPath string
+	publicKeyPath  string
+	domainName     string
+)
+
+func Init(privateKey string, publicKey string, domain string, options ...time.Duration) {
+	privateKeyPath = privateKey
+	publicKeyPath = publicKey
+	domainName = domain
+	if options != nil {
+		if len(options) > 0 {
+			tokenDuration = options[0]
+		}
+		if len(options) > 1 {
+			expireOffset = options[1]
+		}
+	}
+}
+
+var JWTAuth *JWTAuthentication
+
+func GetJWTAuth() *JWTAuthentication {
+	if JWTAuth == nil {
+		if privateKeyPath == "" || publicKeyPath == "" {
+			panic("Public key or/and private key file(s) is/are not defined")
+		}
+		JWTAuth = &JWTAuthentication{
+			privateKey: getPrivateKey(),
+			publicKey:  getPublicKey(),
+		}
+	}
+	return JWTAuth
+}
+
+func (this *JWTAuthentication) GenerateToken(userId int) (string, error) {
+	claims := &jwt.StandardClaims{}
+	claims.ExpiresAt = time.Now().Add(time.Hour * tokenDuration).Unix()
+	claims.IssuedAt = time.Now().Unix()
+	claims.Subject = strconv.Itoa(userId)
+	token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
+	tokenString, err := token.SignedString(this.privateKey)
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
+}
+
+func (this *JWTAuthentication) GetTokenRemainingValidity(timestamp interface{}) int {
+	if validity, ok := timestamp.(float64); ok {
+		tm := time.Unix(int64(validity), 0)
+		remainer := tm.Sub(time.Now())
+		if remainer > 0 {
+			return int(remainer.Seconds() + float64(expireOffset))
+		}
+	}
+	return int(expireOffset)
+}
+
+func HashPassword(password string) string {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err != nil {
+		return ""
+	}
+	return string(hashedPassword[:])
+}
+
+func CompareHashAndPassword(password string, userPassword string) bool {
+	if userPassword != "" {
+		err := bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(password))
+		if err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+func getKeyData(keyPath string) *pem.Block {
+	keyFile, err := os.Open(keyPath)
+	defer keyFile.Close()
+	if err != nil {
+		panic(err)
+	}
+	pemFileInfo, _ := keyFile.Stat()
+	size := pemFileInfo.Size()
+	buffer := bufio.NewReader(keyFile)
+	pemBytes := make([]byte, size)
+	buffer.Read(pemBytes)
+
+	data, _ := pem.Decode(pemBytes)
+	return data
+}
+
+func getPublicKey() *rsa.PublicKey {
+	data := getKeyData(publicKeyPath)
+	keyImported, err := x509.ParsePKIXPublicKey(data.Bytes)
+
+	if err != nil {
+		panic(err)
+	}
+
+	rsaPK, ok := keyImported.(*rsa.PublicKey)
+
+	if !ok {
+		panic(ok)
+	}
+	return rsaPK
+}
+
+func getPrivateKey() *rsa.PrivateKey {
+	data := getKeyData(privateKeyPath)
+	keyImported, err := x509.ParsePKCS8PrivateKey(data.Bytes)
+
+	if err != nil {
+		panic(err)
+	}
+
+	rsaPK, ok := keyImported.(*rsa.PrivateKey)
+
+	if !ok {
+		panic(ok)
+	}
+	return rsaPK
+}
