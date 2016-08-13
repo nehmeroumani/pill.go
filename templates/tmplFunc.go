@@ -108,3 +108,7 @@ func ToJSON(toBeJSON interface{}) string {
 	}
 	return string(json[:])
 }
+
+func TemplateName(pageName string) string{
+	return "_" + pageName + ".html"
+}

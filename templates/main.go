@@ -60,6 +60,7 @@ func RegisterTmplFunc() {
 	AddTmplFunc("Comma", Comma)
 	AddTmplFunc("Commaf", Commaf)
 	AddTmplFunc("ToJSON", ToJSON)
+	AddTmplFunc("TemplateName", TemplateName)
 	AddTmplFunc("FloatToString", FloatToString)
 }
 func GetTemplate(templateName string) *template.Template {
