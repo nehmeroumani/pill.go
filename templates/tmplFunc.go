@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/nehmeroumani/nrgo/clean"
+	"github.com/nehmeroumani/pill.go/clean"
 )
 
 // Comma produces a string form of the given number in base 10 with

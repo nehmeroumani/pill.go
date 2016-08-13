@@ -5,8 +5,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/nehmeroumani/nrgo/clean"
-	"github.com/nehmeroumani/nrgo/templates"
+	"github.com/nehmeroumani/pill.go/clean"
+	"github.com/nehmeroumani/pill.go/templates"
+
 	"gopkg.in/gomail.v2"
 )
 

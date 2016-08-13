@@ -4,7 +4,7 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/nehmeroumani/nrgo/clean"
+	"github.com/nehmeroumani/pill.go/clean"
 )
 
 var tmplFuncs template.FuncMap

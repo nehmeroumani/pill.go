@@ -54,6 +54,9 @@ func (this *Mux) Options(p string) *route {
 func (this *Mux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	this.Router.ServeHTTP(w, req)
 }
+func (this *Mux) NotFoundHandler(w http.ResponseWriter, req *http.Request) {
+	this.Router.NotFoundHandler(w, req)
+}
 
 type route struct {
 	mux     *Mux
