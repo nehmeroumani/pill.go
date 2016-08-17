@@ -38,6 +38,7 @@ func Init(privateKey string, publicKey string, domain string, options ...time.Du
 			expireOffset = options[1]
 		}
 	}
+	GetJWTAuth()
 }
 
 var JWTAuth *JWTAuthentication
