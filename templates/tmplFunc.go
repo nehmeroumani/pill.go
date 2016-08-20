@@ -521,13 +521,25 @@ func StripTags(s string) string {
 	return strings.TrimSpace(striptagsRegexp.ReplaceAllString(s, ""))
 }
 
-func IsCPPage(pageName string) bool{
-	if pageName != "cp-login" && pageName != ""{
-		if len(pageName) > 3{
-			if pageName[:3] == "cp-"{
+func IsCPPage(pageName string) bool {
+	if pageName != "cp-login" && pageName != "" {
+		if len(pageName) > 3 {
+			if pageName[:3] == "cp-" {
 				return true
 			}
 		}
 	}
 	return false
+}
+
+func IsActive(value1 string, value2 string, oneClass ...bool) string {
+	if value1 == value2 {
+		if oneClass != nil && len(oneClass) > 0 {
+			if oneClass[0] {
+				return ` class="active" `
+			}
+		}
+		return " active"
+	}
+	return ""
 }

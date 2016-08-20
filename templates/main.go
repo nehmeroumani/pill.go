@@ -88,6 +88,7 @@ func RegisterTmplFunc() {
 	AddTmplFunc("Random", Random)
 	AddTmplFunc("StripTags", StripTags)
 	AddTmplFunc("IsCPPage", IsCPPage)
+	AddTmplFunc("IsActive", IsActive)
 }
 func GetTemplate(templateName string) *template.Template {
 	if Templates != nil {
