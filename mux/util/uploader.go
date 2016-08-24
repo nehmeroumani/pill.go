@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"image"
@@ -109,7 +110,7 @@ func (this *MultipleUpload) UploadDirectoryPath() string {
 func generateRandomFileName(extension string) string {
 	randBytes := make([]byte, 16)
 	rand.Read(randBytes)
-	return time.Now().Format("20060102150405") + "-" + hex.EncodeToString(randBytes) + extension
+	return strconv.Itoa(int(time.Now().UTC().Unix())) + "-" + hex.EncodeToString(randBytes) + extension
 }
 
 func detectContentType(file multipart.File) string {
