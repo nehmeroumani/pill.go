@@ -72,3 +72,29 @@ func JSON(toBeJSON interface{}, excludedFields ...string) map[string]interface{}
 	}
 	return out
 }
+
+func inArrayStr(v string, array []string) bool {
+	if array != nil && len(array) > 0 {
+		for _, vv := range array {
+			if v == vv {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func Map(m map[string]interface{}, includedFields ...string) map[string]interface{} {
+	if m != nil {
+		if includedFields != nil && len(includedFields) > 0 {
+			cleanedMap := map[string]interface{}{}
+			for k, v := range m {
+				if inArrayStr(k, includedFields){
+					cleanedMap[k] = v
+				}
+			}
+			return cleanedMap
+		}
+	}
+	return nil
+}
