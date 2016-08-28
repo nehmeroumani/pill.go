@@ -17,8 +17,12 @@ type Hooks struct {
 	actionsPriorities map[string][]int
 }
 
-func (this *Hooks) AddAction(actionName string, f func(...interface{}), priority int) {
+func (this *Hooks) AddAction(actionName string, f func(...interface{}), opts ...int) {
 	if actionName != "" && f != nil {
+		priority := 10
+		if opts != nil && len(opts) > 0 {
+			priority = opts[0]
+		}
 		if this.actions == nil {
 			this.actions = map[string]map[int][]func(...interface{}){}
 		}
