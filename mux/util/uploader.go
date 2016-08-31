@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"image"
@@ -57,6 +58,7 @@ func (this *MultipleUpload) Upload() (error, []string) {
 				return err, nil
 			}
 			fileExtension := filepath.Ext(files[i].Filename)
+			fileExtension = strings.ToLower(fileExtension)
 
 			isValidFileType, fileType := isValidFileType(this.FileType, file, fileExtension)
 
