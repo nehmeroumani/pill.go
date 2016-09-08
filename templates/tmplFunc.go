@@ -105,6 +105,11 @@ func Replace(s1 string, s2 string) string {
 
 	return strings.Replace(s2, s1, "", -1)
 }
+func NewLineToBreak(s string) string {
+	defer recovery()
+
+	return strings.Replace(s, "\n", "<br />", -1)
+}
 func Default(arg interface{}, value interface{}) interface{} {
 	defer recovery()
 

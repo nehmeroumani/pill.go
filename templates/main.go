@@ -61,6 +61,7 @@ func RegisterTmplFunc() {
 	AddTmplFunc("ToJSON", ToJSON)
 	AddTmplFunc("FloatToString", FloatToString)
 	AddTmplFunc("Replace", Replace)
+	AddTmplFunc("NewLineToBreak", NewLineToBreak)
 	AddTmplFunc("Default", Default)
 	AddTmplFunc("Length", Length)
 	AddTmplFunc("Lower", Lower)
