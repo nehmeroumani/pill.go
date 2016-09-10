@@ -548,3 +548,7 @@ func IsActive(value1 string, value2 string, oneClass ...bool) string {
 	}
 	return ""
 }
+
+func InversePosition(lisLength int, position int) int {
+	return lisLength - 1 - position
+}

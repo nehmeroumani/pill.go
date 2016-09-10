@@ -90,6 +90,7 @@ func RegisterTmplFunc() {
 	AddTmplFunc("StripTags", StripTags)
 	AddTmplFunc("IsCPPage", IsCPPage)
 	AddTmplFunc("IsActive", IsActive)
+	AddTmplFunc("InversePosition", InversePosition)
 }
 func GetTemplate(templateName string) *template.Template {
 	if Templates != nil {
