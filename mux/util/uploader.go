@@ -72,29 +72,32 @@ func (this *MultipleUpload) Upload() (error, []string) {
 				return err, nil
 			}
 			randomFileName := generateRandomFileName(fileExtension)
+			if ok, pathErr := CreateaFolderPath(this.uploadDirectoryPath); ok {
+				out, err := os.Create(filepath.Join(this.uploadDirectoryPath, randomFileName))
+				defer out.Close()
+				if err != nil {
+					clean.Error(errors.New("Unable to create the file for writing. Check your write access privilege : " + err.Error()))
+					return err, nil
+				}
 
-			out, err := os.Create(filepath.Join(this.uploadDirectoryPath, randomFileName))
-			defer out.Close()
-			if err != nil {
-				clean.Error(errors.New("Unable to create the file for writing. Check your write access privilege : " + err.Error()))
-				return err, nil
-			}
+				_, err = io.Copy(out, file)
 
-			_, err = io.Copy(out, file)
-
-			if err != nil {
-				clean.Error(err)
-				return err, nil
+				if err != nil {
+					clean.Error(err)
+					return err, nil
+				}
+				_, err = file.Seek(0, 0)
+				if err != nil {
+					clean.Error(err)
+					return err, nil
+				}
+				if this.FileType == "image" && this.ImageSizes != nil {
+					resizeImg(randomFileName, this.uploadDirectoryPath, this.ImageCategory, this.ImageSizes, file, fileType)
+				}
+				uploadedFilesNames = append(uploadedFilesNames, randomFileName)
+			} else {
+				return pathErr, nil
 			}
-			_, err = file.Seek(0, 0)
-			if err != nil {
-				clean.Error(err)
-				return err, nil
-			}
-			if this.FileType == "image" && this.ImageSizes != nil {
-				resizeImg(randomFileName, this.uploadDirectoryPath, this.ImageCategory, this.ImageSizes, file, fileType)
-			}
-			uploadedFilesNames = append(uploadedFilesNames, randomFileName)
 		}
 		return nil, uploadedFilesNames
 	}
@@ -142,27 +145,32 @@ func resizeImg(fileName string, upDirPath string, imageCategory string, targetSi
 		if s, exist := imageSizes[imageCategory]; exist {
 			for _, sizeName := range targetSizes {
 				if size, ok := s[sizeName]; ok {
-					m := thumbnail(size[0], size[1], img, resize.Lanczos3)
-					out, err := os.Create(filepath.Join(upDirPath, sizeName, fileName))
-					if err != nil {
-						clean.Error(err)
-					}
-					defer out.Close()
-					m, err = cutter.Crop(m, cutter.Config{
-						Width:  int(size[0]),
-						Height: int(size[1]),
-						Mode:   cutter.Centered,
-					})
-					if err != nil {
-						clean.Error(err)
-					}
-					switch fileType {
-					case "image/jpeg", "image/jpg":
-						err = jpeg.Encode(out, m, nil)
-					case "image/png":
-						err = png.Encode(out, m)
-					case "image/gif":
-						err = gif.Encode(out, m, nil)
+					if pathOk, pathErr := CreateaFolderPath(filepath.Join(upDirPath, sizeName)); pathOk {
+						m := thumbnail(size[0], size[1], img, resize.Lanczos3)
+						out, err := os.Create(filepath.Join(upDirPath, sizeName, fileName))
+						if err != nil {
+							clean.Error(err)
+						}
+						defer out.Close()
+						m, err = cutter.Crop(m, cutter.Config{
+							Width:  int(size[0]),
+							Height: int(size[1]),
+							Mode:   cutter.Centered,
+						})
+						if err != nil {
+							clean.Error(err)
+						}
+						switch fileType {
+						case "image/jpeg", "image/jpg":
+							err = jpeg.Encode(out, m, nil)
+						case "image/png":
+							err = png.Encode(out, m)
+						case "image/gif":
+							err = gif.Encode(out, m, nil)
+						}
+					} else {
+						clean.Error(pathErr)
+						return
 					}
 				}
 			}
@@ -251,4 +259,17 @@ func thumbnail(minW uint, minH uint, img image.Image, interp resize.Interpolatio
 		newWidth = origWidth
 	}
 	return resize.Resize(uint(newWidth), uint(newHeight), img, interp)
+}
+
+func CreateaFolderPath(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		if err = os.MkdirAll(path, 0777); err != nil {
+			return false, err
+		}
+	}
+	return true, err
 }
