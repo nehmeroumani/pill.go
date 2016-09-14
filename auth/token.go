@@ -63,6 +63,9 @@ func SetAccessTokenCookie(w http.ResponseWriter, tokenString string) http.Respon
 	if domainName != "" {
 		cookie.Domain = domainName
 	}
+	if secureToken{
+		cookie.Secure = true
+	}
 	w.Header().Add("Set-Cookie", cookie.String())
 	return w
 }
@@ -75,6 +78,9 @@ func RemoveAccessTokenCookie(w http.ResponseWriter) http.ResponseWriter {
 	cookie.Path = "/"
 	if domainName != "" {
 		cookie.Domain = domainName
+	}
+	if secureToken {
+		cookie.Secure = true
 	}
 	cookie.Expires, _ = time.Parse("Thu, 01 Jan 1970 00:00:00 GMT", "Thu, 01 Jan 1970 00:00:00 GMT")
 	w.Header().Add("Set-Cookie", cookie.String())

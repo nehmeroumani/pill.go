@@ -24,12 +24,14 @@ var (
 	privateKeyPath string
 	publicKeyPath  string
 	domainName     string
+	secureToken    bool
 )
 
-func Init(privateKey string, publicKey string, domain string, options ...time.Duration) {
+func Init(privateKey string, publicKey string, domain string, onlyHTTPS bool, options ...time.Duration) {
 	privateKeyPath = privateKey
 	publicKeyPath = publicKey
 	domainName = domain
+	secureToken = onlyHTTPS
 	if options != nil {
 		if len(options) > 0 {
 			tokenDuration = options[0]
