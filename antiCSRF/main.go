@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/nehmeroumani/nrgo/clean"
+	"github.com/nehmeroumani/pill.go/clean"
 )
 
 const (
@@ -17,10 +17,12 @@ const (
 )
 
 var (
-	tokenSalt   string
-	tokenLength int
-	domainName  string
-	secureToken bool
+	tokenSalt      string
+	tokenLength    int
+	domainName     string
+	encryptedToken bool
+	secureToken    bool
+	safeMethods    = []string{"GET", "HEAD", "OPTIONS", "TRACE"}
 )
 
 func Init(TokenLength int, DomainName string, opts ...interface{}) {
@@ -34,33 +36,20 @@ func Init(TokenLength int, DomainName string, opts ...interface{}) {
 			}
 		}
 	}
+	if tokenSalt != "" {
+		encryptedToken = true
+	}
 }
 
-func NewCSRFToken(opts ...interface{}) *CSRFToken {
+func NewCSRFToken() *CSRFToken {
 	token := &CSRFToken{}
-	if opts != nil {
-		if len(opts) > 0 {
-			token.Encrypted = opts[0].(bool)
-			if token.Encrypted && tokenSalt == "" {
-				token.Encrypted = false
-			}
-		}
-	}
-	var err error
 	randBytes, _ := generateRandomBytes(tokenLength)
 	token.RealToken = string(randBytes)
-	if token.Encrypted {
-		token.RealToken, err = encrypt([]byte(tokenSalt), token.RealToken)
-		if err != nil {
-			clean.Error(err)
-		}
-	}
 	return token
 }
 
 type CSRFToken struct {
 	RealToken     string
-	Encrypted     bool
 	MaskedToken   string
 	UnmaskedToken string
 }
@@ -91,17 +80,10 @@ func (this *CSRFToken) Unmask(issued string) string {
 }
 
 func (this *CSRFToken) IsValidRequestToken() bool {
-	var err error
-	realToken := this.RealToken
-	if this.Encrypted {
-		if _, err = decrypt([]byte(tokenSalt), realToken); err != nil {
-			return false
-		}
+	a := []byte(this.RealToken)
+	if this.UnmaskedToken == "" {
+		this.Unmask(this.MaskedToken)
 	}
-	a := []byte(realToken)
-    if this.UnmaskedToken == ""{
-        this.Unmask(this.MaskedToken)
-    }
 	b := []byte(this.UnmaskedToken)
 	if len(a) != len(b) {
 		return false
@@ -113,7 +95,16 @@ func (this *CSRFToken) IsValidRequestToken() bool {
 func (this *CSRFToken) SetCookie(w http.ResponseWriter) http.ResponseWriter {
 	cookie := http.Cookie{}
 	cookie.Name = tokenCookieName
-	cookie.Value = this.RealToken
+	if encryptedToken {
+		var err error
+		cookie.Value, err = encrypt([]byte(tokenSalt), this.RealToken)
+		if err != nil {
+			clean.Error(err)
+			return w
+		}
+	} else {
+		cookie.Value = base64.StdEncoding.EncodeToString([]byte(this.RealToken))
+	}
 	cookie.HttpOnly = true
 	cookie.Path = "/"
 	if domainName != "" {
@@ -183,12 +174,46 @@ func GetRequestCSRFToken(r *http.Request) *CSRFToken {
 	// nil byte slice on a decoding error (this will fail upstream).
 	decodedRequestToken, _ := base64.StdEncoding.DecodeString(requestToken)
 
-	realTokenCookie, err := r.Cookie(tokenCookieName)
-	if err != nil {
+	realTokenCookie, err1 := r.Cookie(tokenCookieName)
+	if err1 != nil {
+		clean.Error(err1)
 		return nil
 	}
+	realToken := realTokenCookie.Value
+	if !encryptedToken {
+		decodedRealToken, err2 := base64.StdEncoding.DecodeString(realTokenCookie.Value)
+		if err2 != nil {
+			clean.Error(err2)
+			return nil
+		}
+		realToken = string(decodedRealToken)
+	}
+	if encryptedToken {
+		var err3 error
+		if realToken, err3 = decrypt([]byte(tokenSalt), realToken); err3 != nil {
+			clean.Error(err3)
+			return nil
+		}
+	}
 	csrfToken := &CSRFToken{}
-	csrfToken.RealToken = realTokenCookie.Value
+	csrfToken.RealToken = realToken
 	csrfToken.MaskedToken = string(decodedRequestToken)
 	return csrfToken
+}
+
+func contains(vals []string, s string) bool {
+	for _, v := range vals {
+		if v == s {
+			return true
+		}
+	}
+
+	return false
+}
+
+func IsSafeMethod(method string) bool {
+	if contains(safeMethods, method) {
+		return true
+	}
+	return false
 }
