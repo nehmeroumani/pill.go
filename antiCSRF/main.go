@@ -17,7 +17,7 @@ const (
 )
 
 var (
-	tokenSalt      string
+	encryptionKey      string
 	tokenLength    int
 	domainName     string
 	encryptedToken bool
@@ -32,11 +32,11 @@ func Init(TokenLength int, DomainName string, opts ...interface{}) {
 		if len(opts) > 0 {
 			secureToken = opts[0].(bool)
 			if len(opts) > 1 {
-				tokenSalt = opts[1].(string)
+				encryptionKey = opts[1].(string)
 			}
 		}
 	}
-	if tokenSalt != "" {
+	if encryptionKey != "" {
 		encryptedToken = true
 	}
 }
@@ -97,7 +97,7 @@ func (this *CSRFToken) SetCookie(w http.ResponseWriter) http.ResponseWriter {
 	cookie.Name = tokenCookieName
 	if encryptedToken {
 		var err error
-		cookie.Value, err = encrypt([]byte(tokenSalt), this.RealToken)
+		cookie.Value, err = encrypt([]byte(encryptionKey), this.RealToken)
 		if err != nil {
 			clean.Error(err)
 			return w
@@ -190,7 +190,7 @@ func GetRequestCSRFToken(r *http.Request) *CSRFToken {
 	}
 	if encryptedToken {
 		var err3 error
-		if realToken, err3 = decrypt([]byte(tokenSalt), realToken); err3 != nil {
+		if realToken, err3 = decrypt([]byte(encryptionKey), realToken); err3 != nil {
 			clean.Error(err3)
 			return nil
 		}
