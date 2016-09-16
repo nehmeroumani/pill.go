@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net/url"
 
+	"github.com/nehmeroumani/pill.go/clean"
 	"github.com/parnurzeal/gorequest"
 )
 
@@ -29,6 +30,23 @@ func Init(AppId string, AppSecret string, opts ...string) {
 	tokenExchangeBaseURL = "https://graph.accountkit.com/" + apiVersion + "/access_token"
 }
 
+type AccountDetails struct {
+	ID    string `json:"id"`
+	Phone *Phone `json:"phone"`
+}
+
+type Phone struct {
+	Number         string `json:"number"`
+	NationalNumber string `json:"national_number"`
+	CountryPrefix  string `json:"country_prefix"`
+}
+
+func NewAccountDetails() *AccountDetails {
+	accountDetails := &AccountDetails{}
+	accountDetails.Phone = &Phone{}
+	return accountDetails
+}
+
 func ExchangeToken(authCode string) (string, error) {
 	if authCode != "" {
 		tokenURL, _ := url.Parse(tokenExchangeBaseURL)
@@ -42,18 +60,20 @@ func ExchangeToken(authCode string) (string, error) {
 		if errs != nil && len(errs) > 0 {
 			return "", errs[0]
 		}
-		resp := map[string]string{}
+		resp := map[string]interface{}{}
 		if err := json.Unmarshal([]byte(body), &resp); err == nil {
 			if accessToken, ok := resp["access_token"]; ok {
-				return accessToken, nil
+				return accessToken.(string), nil
 			}
+		} else {
+			clean.Error(err)
 		}
 		return "", errors.New("invalid_authorization_code")
 	}
 	return "", errors.New("authorization_code_was_missed")
 }
 
-func AccountDetails(accessToken string) (map[string]string, error) {
+func GetAccountDetails(accessToken string) (*AccountDetails, error) {
 	if accessToken != "" {
 		URL, _ := url.Parse(meEndpointBaseURL)
 		query := URL.Query()
@@ -65,9 +85,11 @@ func AccountDetails(accessToken string) (map[string]string, error) {
 		if errs != nil && len(errs) > 0 {
 			return nil, errs[0]
 		}
-		resp := map[string]string{}
+		resp := NewAccountDetails()
 		if err := json.Unmarshal([]byte(body), &resp); err == nil {
 			return resp, nil
+		} else {
+			clean.Error(err)
 		}
 		return nil, errors.New("invalid_access_token")
 	}
@@ -80,19 +102,15 @@ func IsPhoneNumberOwner(phoneNumber string, authCode string, opts ...bool) bool 
 		national = opts[0]
 	}
 	if accessToken, err1 := ExchangeToken(authCode); err1 == nil {
-		if accountDetails, err2 := AccountDetails(accessToken); err2 == nil {
+		if accountDetails, err2 := GetAccountDetails(accessToken); err2 == nil {
 			if accountDetails != nil {
 				if national {
-					if nationalNumber, ok := accountDetails["national_number"]; ok {
-						if nationalNumber == phoneNumber {
-							return true
-						}
+					if accountDetails.Phone.NationalNumber == phoneNumber {
+						return true
 					}
 				} else {
-					if number, ok := accountDetails["number"]; ok {
-						if number == phoneNumber {
-							return true
-						}
+					if accountDetails.Phone.Number == phoneNumber {
+						return true
 					}
 				}
 			}
