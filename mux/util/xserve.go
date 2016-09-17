@@ -8,7 +8,7 @@ import (
 )
 
 var publicDirPath string
-var cacheTTL int = 30
+var cacheTTL int = 3600
 
 func InitXServe(PublicDirPath string, CacheTTL ...int) {
 	publicDirPath = PublicDirPath
