@@ -13,8 +13,8 @@ func GetBasicAuthData(w http.ResponseWriter, r *http.Request, customHeader ...st
 		if customHeader != nil && len(customHeader) > 0 {
 			header = customHeader[0]
 		}
-		if r.Header[header] != nil && len(r.Header["Authorization"]) > 0 {
-			authorization = r.Header["Authorization"][0]
+		if r.Header[header] != nil && len(r.Header[header]) > 0 {
+			authorization = r.Header[header][0]
 		} else {
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return "", ""
