@@ -11,18 +11,18 @@ import (
 )
 
 const (
-	tokenRequestHeader string = "X-CSRF-TOKEN"
+	tokenRequestHeader string = "X-Csrf-Token"
 	tokenFieldName     string = "csrf_token"
 	tokenCookieName    string = "csrf_base_token"
 )
 
 var (
-	encryptionKey      string
+	encryptionKey  string
 	tokenLength    int
 	domainName     string
 	encryptedToken bool
 	secureToken    bool
-	safeMethods    = []string{"GET", "HEAD", "OPTIONS", "TRACE"}
+	safeMethods    = []string{"HEAD", "OPTIONS", "TRACE"}
 )
 
 func Init(TokenLength int, DomainName string, opts ...interface{}) {
