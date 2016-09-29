@@ -6,6 +6,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/nehmeroumani/pill.go/clean"
 )
@@ -14,6 +17,7 @@ const (
 	tokenRequestHeader string = "X-Csrf-Token"
 	tokenFieldName     string = "csrf_token"
 	tokenCookieName    string = "csrf_base_token"
+	tokenTTL           int    = 1.5 * 3600 //seconds
 )
 
 var (
@@ -89,7 +93,18 @@ func (this *CSRFToken) IsValidRequestToken() bool {
 		return false
 	}
 
-	return subtle.ConstantTimeCompare(a, b) == 1
+	if subtle.ConstantTimeCompare(a, b) == 1 {
+		tParts := strings.Split(string(b), "-")
+		if len(tParts) > 1 {
+			if t, err := strconv.Atoi(tParts[0]); err == nil {
+				LT := int(time.Now().UTC().Unix()) - t
+				if LT < tokenTTL+10 {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func (this *CSRFToken) SetCookie(w http.ResponseWriter) http.ResponseWriter {
@@ -127,14 +142,18 @@ func (this *CSRFToken) HTMLInput() string {
 }
 
 func generateRandomBytes(n int) ([]byte, error) {
+	t := []byte(strconv.Itoa(int(time.Now().UTC().Unix())) + "-")
+	n = n - len(t)
 	b := make([]byte, n)
 	_, err := rand.Read(b)
 	// err == nil only if len(b) == n
 	if err != nil {
 		return nil, err
 	}
-
-	return b, nil
+	out := []byte{}
+	out = append(out, t...)
+	out = append(out, b...)
+	return out, nil
 }
 
 func xorToken(a, b []byte) []byte {
