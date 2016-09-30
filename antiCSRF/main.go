@@ -56,7 +56,7 @@ type CSRFToken struct {
 	RealToken     string
 	MaskedToken   string
 	UnmaskedToken string
-	IsValid         bool
+	IsValid       bool
 }
 
 func (this *CSRFToken) WithMask() string {
@@ -196,6 +196,7 @@ func GetRequestCSRFToken(r *http.Request) *CSRFToken {
 
 	realTokenCookie, err1 := r.Cookie(tokenCookieName)
 	if err1 != nil {
+		clean.Error(err1)
 		return nil
 	}
 	realToken := realTokenCookie.Value
