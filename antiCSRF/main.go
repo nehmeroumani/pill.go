@@ -194,10 +194,6 @@ func GetRequestCSRFToken(r *http.Request) *CSRFToken {
 	// nil byte slice on a decoding error (this will fail upstream).
 	decodedRequestToken, _ := base64.StdEncoding.DecodeString(requestToken)
 
-	cookies := r.Cookies()
-	for _, c := range cookies {
-		fmt.Println(c)
-	}
 	realTokenCookie, err1 := r.Cookie(tokenCookieName)
 	if err1 != nil {
 		clean.Error(err1)
