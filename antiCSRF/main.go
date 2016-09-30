@@ -195,7 +195,7 @@ func GetRequestCSRFToken(r *http.Request) *CSRFToken {
 	decodedRequestToken, _ := base64.StdEncoding.DecodeString(requestToken)
 
 	cookies := r.Cookies()
-	for c, _ := range cookies {
+	for _, c := range cookies {
 		fmt.Println(c)
 	}
 	realTokenCookie, err1 := r.Cookie(tokenCookieName)
