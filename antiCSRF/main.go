@@ -56,6 +56,7 @@ type CSRFToken struct {
 	RealToken     string
 	MaskedToken   string
 	UnmaskedToken string
+	Valid         bool
 }
 
 func (this *CSRFToken) WithMask() string {
