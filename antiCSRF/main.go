@@ -56,7 +56,6 @@ type CSRFToken struct {
 	RealToken     string
 	MaskedToken   string
 	UnmaskedToken string
-	IsValid       bool
 }
 
 func (this *CSRFToken) WithMask() string {
@@ -95,7 +94,7 @@ func (this *CSRFToken) IsValidRequestToken() bool {
 	}
 
 	if subtle.ConstantTimeCompare(a, b) == 1 {
-		tParts := strings.Split(string(b), "-")
+		tParts := strings.Split(this.RealToken, "-")
 		if len(tParts) > 1 {
 			if t, err := strconv.Atoi(tParts[0]); err == nil {
 				LT := int(time.Now().UTC().Unix()) - t
@@ -107,7 +106,18 @@ func (this *CSRFToken) IsValidRequestToken() bool {
 	}
 	return false
 }
-
+func (this *CSRFToken) IsExpired() bool {
+	tParts := strings.Split(this.RealToken, "-")
+	if len(tParts) > 1 {
+		if t, err := strconv.Atoi(tParts[0]); err == nil {
+			LT := int(time.Now().UTC().Unix()) - t
+			if LT < tokenTTL+10 {
+				return false
+			}
+		}
+	}
+	return true
+}
 func (this *CSRFToken) SetCookie(w http.ResponseWriter) http.ResponseWriter {
 	cookie := http.Cookie{}
 	cookie.Name = tokenCookieName
