@@ -16,6 +16,7 @@ func wrapHandler(h http.Handler) httptreemux.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request, params map[string]string) {
 		context.Set(req, "params", params)
 		defer func() {
+			req.Close = true
 			req.Body.Close()
 		}()
 		context.ClearHandler(h).ServeHTTP(w, req)
