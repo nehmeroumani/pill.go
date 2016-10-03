@@ -56,7 +56,7 @@ func GetJWTAuth() *JWTAuthentication {
 
 func (this *JWTAuthentication) GenerateToken(userId int) (string, error) {
 	claims := &jwt.StandardClaims{}
-	claims.ExpiresAt = time.Now().Add(time.Hours * tokenDuration).Unix()
+	claims.ExpiresAt = time.Now().Add(time.Hour * tokenDuration).Unix()
 	claims.IssuedAt = time.Now().Unix()
 	claims.Subject = strconv.Itoa(userId)
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
