@@ -9,7 +9,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-func IsAuthenticated(tokenString string) (bool, int, int) {
+func IsAuthenticated(tokenString string, opts ...int64) (bool, int, int) {
 	if tokenString != "" && tokenString != "deleted" {
 		claims := &jwt.StandardClaims{}
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
@@ -21,19 +21,21 @@ func IsAuthenticated(tokenString string) (bool, int, int) {
 		} else if !token.Valid {
 			return false, 0, http.StatusUnauthorized
 		}
-		if getTokenRemainingValidity(claims.ExpiresAt) > 0 {
-			var id int
-			if id, err = strconv.Atoi(claims.Subject); err == nil {
-				return true, id, http.StatusOK
-			} else {
+		var lastPasswordUpdate int64
+		if opts != nil && len(opts) > 0 {
+			lastPasswordUpdate = opts[0]
+		}
+		if claims.IssuedAt > lastPasswordUpdate {
+			if getTokenRemainingValidity(claims.ExpiresAt) > 0 {
+				var id int
+				if id, err = strconv.Atoi(claims.Subject); err == nil {
+					return true, id, http.StatusOK
+				}
 				return false, 0, http.StatusInternalServerError
 			}
-		} else {
-			return false, 0, http.StatusUnauthorized
 		}
-	} else {
-		return false, 0, http.StatusUnauthorized
 	}
+	return false, 0, http.StatusUnauthorized
 }
 
 func GetTokenFromRequest(req *http.Request) string {
@@ -58,7 +60,7 @@ func GetTokenFromRequest(req *http.Request) string {
 	return ""
 }
 
-func SetAccessTokenCookie(w http.ResponseWriter, tokenString string) http.ResponseWriter {
+func SetAccessTokenCookie(w http.ResponseWriter, tokenString string, opts ...bool) http.ResponseWriter {
 	cookie := http.Cookie{}
 	cookie.Name = "accessToken"
 	cookie.Value = tokenString
@@ -69,6 +71,11 @@ func SetAccessTokenCookie(w http.ResponseWriter, tokenString string) http.Respon
 	}
 	if secureToken {
 		cookie.Secure = true
+	}
+	if opts != nil && len(opts) > 0 {
+		if opts[0] {
+			cookie.Expires = time.Now().Add(time.Hour * tokenDuration)
+		}
 	}
 	w.Header().Add("Set-Cookie", cookie.String())
 	return w
