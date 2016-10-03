@@ -21,11 +21,15 @@ func IsAuthenticated(tokenString string) (bool, int, int) {
 		} else if !token.Valid {
 			return false, 0, http.StatusUnauthorized
 		}
-		var id int
-		if id, err = strconv.Atoi(claims.Subject); err == nil {
-			return true, id, http.StatusOK
+		if getTokenRemainingValidity(claims.ExpiresAt) > 0 {
+			var id int
+			if id, err = strconv.Atoi(claims.Subject); err == nil {
+				return true, id, http.StatusOK
+			} else {
+				return false, 0, http.StatusInternalServerError
+			}
 		} else {
-			return false, 0, http.StatusInternalServerError
+			return false, 0, http.StatusUnauthorized
 		}
 	} else {
 		return false, 0, http.StatusUnauthorized
@@ -63,7 +67,7 @@ func SetAccessTokenCookie(w http.ResponseWriter, tokenString string) http.Respon
 	if domainName != "" {
 		cookie.Domain = domainName
 	}
-	if secureToken{
+	if secureToken {
 		cookie.Secure = true
 	}
 	w.Header().Add("Set-Cookie", cookie.String())
@@ -85,4 +89,13 @@ func RemoveAccessTokenCookie(w http.ResponseWriter) http.ResponseWriter {
 	cookie.Expires, _ = time.Parse("Thu, 01 Jan 1970 00:00:00 GMT", "Thu, 01 Jan 1970 00:00:00 GMT")
 	w.Header().Add("Set-Cookie", cookie.String())
 	return w
+}
+
+func getTokenRemainingValidity(timestamp int64) int {
+	tm := time.Unix(timestamp, 0)
+	remainder := tm.Sub(time.Now())
+	if remainder > 0 {
+		return int(remainder.Seconds())
+	}
+	return -1
 }

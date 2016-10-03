@@ -19,8 +19,7 @@ type JWTAuthentication struct {
 }
 
 var (
-	tokenDuration  time.Duration = 72
-	expireOffset   time.Duration = 3600
+	tokenDuration  time.Duration = 24 * 7
 	privateKeyPath string
 	publicKeyPath  string
 	domainName     string
@@ -35,9 +34,6 @@ func Init(privateKey string, publicKey string, domain string, onlyHTTPS bool, op
 	if options != nil {
 		if len(options) > 0 {
 			tokenDuration = options[0]
-		}
-		if len(options) > 1 {
-			expireOffset = options[1]
 		}
 	}
 	GetJWTAuth()
@@ -60,7 +56,7 @@ func GetJWTAuth() *JWTAuthentication {
 
 func (this *JWTAuthentication) GenerateToken(userId int) (string, error) {
 	claims := &jwt.StandardClaims{}
-	claims.ExpiresAt = time.Now().Add(time.Hour * tokenDuration).Unix()
+	claims.ExpiresAt = time.Now().Add(time.Hours * tokenDuration).Unix()
 	claims.IssuedAt = time.Now().Unix()
 	claims.Subject = strconv.Itoa(userId)
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
@@ -69,17 +65,6 @@ func (this *JWTAuthentication) GenerateToken(userId int) (string, error) {
 		return "", err
 	}
 	return tokenString, nil
-}
-
-func (this *JWTAuthentication) GetTokenRemainingValidity(timestamp interface{}) int {
-	if validity, ok := timestamp.(float64); ok {
-		tm := time.Unix(int64(validity), 0)
-		remainer := tm.Sub(time.Now())
-		if remainer > 0 {
-			return int(remainer.Seconds() + float64(expireOffset))
-		}
-	}
-	return int(expireOffset)
 }
 
 func HashPassword(password string) string {
