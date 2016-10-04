@@ -86,7 +86,7 @@ func RefreshAccessTokenCookie(w http.ResponseWriter, req *http.Request, userID i
 	refresh := true
 	if tokenWasRefurbished != nil {
 		if r, parseErr := strconv.ParseBool(tokenWasRefurbished.Value); parseErr == nil {
-			refresh = r
+			refresh = !r
 		}
 	}
 	if refresh {
