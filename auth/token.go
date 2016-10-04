@@ -53,7 +53,7 @@ func GetTokenFromRequest(req *http.Request) string {
 		return tokStr
 	}
 
-	tokenCookie, err := req.Cookie("accessToken")
+	tokenCookie, err := req.Cookie("access_token")
 	if err == nil {
 		return tokenCookie.Value
 	}
@@ -62,7 +62,7 @@ func GetTokenFromRequest(req *http.Request) string {
 
 func SetAccessTokenCookie(w http.ResponseWriter, tokenString string, opts ...bool) http.ResponseWriter {
 	cookie := http.Cookie{}
-	cookie.Name = "accessToken"
+	cookie.Name = "access_token"
 	cookie.Value = tokenString
 	cookie.HttpOnly = true
 	cookie.Path = "/"
@@ -81,9 +81,50 @@ func SetAccessTokenCookie(w http.ResponseWriter, tokenString string, opts ...boo
 	return w
 }
 
+func RefreshAccessTokenCookie(w http.ResponseWriter, req *http.Request, userID int) http.ResponseWriter {
+	tokenWasRefurbished, _ := req.Cookie("token_was_refurbished")
+	refresh := true
+	if tokenWasRefurbished != nil {
+		if r, parseErr := strconv.ParseBool(tokenWasRefurbished.Value); parseErr == nil {
+			refresh = r
+		}
+	}
+	if refresh {
+		cookie, err := req.Cookie("access_token")
+		if err == nil {
+			jwtAuth := GetJWTAuth()
+			tokenString, tErr := jwtAuth.GenerateToken(userID)
+			if tErr == nil {
+				tokenWasRefurbishedCookie := http.Cookie{}
+				tokenWasRefurbishedCookie.Name = "token_was_refurbished"
+				tokenWasRefurbishedCookie.Value = "true"
+				tokenWasRefurbishedCookie.HttpOnly = true
+				tokenWasRefurbishedCookie.Path = "/"
+				cookie.Value = tokenString
+				cookie.HttpOnly = true
+				cookie.Path = "/"
+				if domainName != "" {
+					cookie.Domain = domainName
+					tokenWasRefurbishedCookie.Domain = domainName
+				}
+				if secureToken {
+					tokenWasRefurbishedCookie.Secure = true
+					cookie.Secure = true
+				}
+				if cookie.MaxAge > 0 {
+					cookie.Expires = time.Now().Add(time.Hour * tokenDuration)
+				}
+				w.Header().Add("Set-Cookie", cookie.String())
+				w.Header().Add("Set-Cookie", tokenWasRefurbishedCookie.String())
+			}
+		}
+	}
+	return w
+}
+
 func RemoveAccessTokenCookie(w http.ResponseWriter) http.ResponseWriter {
 	cookie := http.Cookie{}
-	cookie.Name = "accessToken"
+	cookie.Name = "access_token"
 	cookie.Value = "deleted"
 	cookie.HttpOnly = true
 	cookie.Path = "/"
