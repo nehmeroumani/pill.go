@@ -552,3 +552,9 @@ func IsActive(value1 string, value2 string, oneClass ...bool) string {
 func InversePosition(lisLength int, position int) int {
 	return lisLength - 1 - position
 }
+
+func TJoin(s ...string) string {
+    // first arg is sep, remaining args are strings to join
+    return strings.Join(s[1:], s[0])
+}
+
