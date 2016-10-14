@@ -152,13 +152,15 @@ func resizeImg(fileName string, upDirPath string, imageCategory string, targetSi
 							clean.Error(err)
 						}
 						defer out.Close()
-						m, err = cutter.Crop(m, cutter.Config{
-							Width:  int(size[0]),
-							Height: int(size[1]),
-							Mode:   cutter.Centered,
-						})
-						if err != nil {
-							clean.Error(err)
+						if size[0] > 0 && size[1] > 0 {
+							m, err = cutter.Crop(m, cutter.Config{
+								Width:  int(size[0]),
+								Height: int(size[1]),
+								Mode:   cutter.Centered,
+							})
+							if err != nil {
+								clean.Error(err)
+							}
 						}
 						switch fileType {
 						case "image/jpeg", "image/jpg":
@@ -213,50 +215,55 @@ func thumbnail(minW uint, minH uint, img image.Image, interp resize.Interpolatio
 	minHeight := float64(minH) // 80
 	minWidth := float64(minW)  // 80
 
-	// Return original image if it have same size as constraints
-	if minWidth == origWidth && minHeight == origHeight {
-		return img
-	}
-
-	if origWidth > minWidth && origHeight > minWidth {
-		scale := origWidth / minWidth //902 / 80 = 11.275
-		origWidth /= scale            // 902 / 11.275 = 80
-		origHeight /= scale           // 902 / 11.275 = 80
-	}
-
-	if origWidth < minWidth && origHeight < minWidth {
-		scale := minWidth / origWidth
-		origWidth *= scale
-		origHeight *= scale
-	}
-
-	if origWidth < minWidth {
-		//origWidth -> origHeight
-		//minWidth -> minHeight
-		newHeight = (origHeight * minWidth) / origWidth
-		newWidth = minWidth
-
-		if newHeight < minHeight {
-			//origWidth -> origHeight
-			//minWidth -> minHeight
-			newWidth = minHeight * origWidth / origHeight
-			newHeight = minHeight
+	if minW > 0 && minH > 0 {
+		// Return original image if it have same size as constraints
+		if minWidth == origWidth && minHeight == origHeight {
+			return img
 		}
-	} else if origHeight < minHeight { //375 < 400
-		//origWidth -> origHeight
-		//minWidth -> minHeight
-		newWidth = (origWidth * minHeight) / origHeight //500 * 400 / 375 = 533
-		newHeight = minHeight                           //400
 
-		if newWidth < minWidth { //533 > 500
+		if origWidth > minWidth && origHeight > minWidth {
+			scale := origWidth / minWidth //902 / 80 = 11.275
+			origWidth /= scale            // 902 / 11.275 = 80
+			origHeight /= scale           // 902 / 11.275 = 80
+		}
+
+		if origWidth < minWidth && origHeight < minWidth {
+			scale := minWidth / origWidth
+			origWidth *= scale
+			origHeight *= scale
+		}
+
+		if origWidth < minWidth {
 			//origWidth -> origHeight
 			//minWidth -> minHeight
-			newHeight = minWidth * origHeight / origWidth //500 * 375 / 500 = 375
-			newWidth = minWidth                           //500
+			newHeight = (origHeight * minWidth) / origWidth
+			newWidth = minWidth
+
+			if newHeight < minHeight {
+				//origWidth -> origHeight
+				//minWidth -> minHeight
+				newWidth = minHeight * origWidth / origHeight
+				newHeight = minHeight
+			}
+		} else if origHeight < minHeight { //375 < 400
+			//origWidth -> origHeight
+			//minWidth -> minHeight
+			newWidth = (origWidth * minHeight) / origHeight //500 * 400 / 375 = 533
+			newHeight = minHeight                           //400
+
+			if newWidth < minWidth { //533 > 500
+				//origWidth -> origHeight
+				//minWidth -> minHeight
+				newHeight = minWidth * origHeight / origWidth //500 * 375 / 500 = 375
+				newWidth = minWidth                           //500
+			}
+		} else {
+			newHeight = origHeight
+			newWidth = origWidth
 		}
 	} else {
-		newHeight = origHeight
-		newWidth = origWidth
+		newHeight = minH
+		newWidth = minW
 	}
 	return resize.Resize(uint(newWidth), uint(newHeight), img, interp)
 }
