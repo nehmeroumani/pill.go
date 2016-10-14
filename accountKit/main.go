@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
+	"strings"
 
 	"github.com/nehmeroumani/pill.go/clean"
 	"github.com/parnurzeal/gorequest"
@@ -107,9 +108,13 @@ func IsPhoneNumberOwner(phoneNumber string, authCode string, opts ...bool) bool 
 				if national {
 					if accountDetails.Phone.NationalNumber == phoneNumber {
 						return true
+					} else if strings.Replace(accountDetails.Phone.NationalNumber, "+", "", -1) == phoneNumber {
+						return true
 					}
 				} else {
 					if accountDetails.Phone.Number == phoneNumber {
+						return true
+					} else if strings.Replace(accountDetails.Phone.Number, "+", "", -1) == phoneNumber {
 						return true
 					}
 				}
