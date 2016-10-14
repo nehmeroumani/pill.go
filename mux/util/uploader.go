@@ -262,8 +262,8 @@ func thumbnail(minW uint, minH uint, img image.Image, interp resize.Interpolatio
 			newWidth = origWidth
 		}
 	} else {
-		newHeight = minH
-		newWidth = minW
+		newHeight = float64(minH)
+		newWidth = float64(minW)
 	}
 	return resize.Resize(uint(newWidth), uint(newHeight), img, interp)
 }
