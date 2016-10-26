@@ -558,3 +558,6 @@ func TJoin(s ...string) string {
     return strings.Join(s[1:], s[0])
 }
 
+func Timestamp(t *time.Time) int64{
+	return t.Unix()
+}

@@ -92,6 +92,7 @@ func RegisterTmplFunc() {
 	AddTmplFunc("IsActive", IsActive)
 	AddTmplFunc("InversePosition", InversePosition)
 	AddTmplFunc("TJoin", TJoin)
+	AddTmplFunc("Timestamp", Timestamp)
 }
 func GetTemplate(templateName string) *template.Template {
 	if Templates != nil {
