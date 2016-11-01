@@ -38,7 +38,7 @@ func IsAuthenticated(tokenString string, opts ...int64) (bool, int, int) {
 	return false, 0, http.StatusUnauthorized
 }
 
-func GetTokenFromRequest(req *http.Request) string {
+func GetTokenFromRequest(w http.ResponseWriter, req *http.Request) string {
 	// Look for an Authorization header
 	if ah := req.Header.Get("Authorization"); ah != "" {
 		// Should be a bearer token
