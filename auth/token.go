@@ -46,16 +46,17 @@ func GetTokenFromRequest(req *http.Request) string {
 			return ah[7:]
 		}
 	}
-
+	tokenCookie, err := req.Cookie("access_token")
+	if err == nil {
+		if tokenCookie.Value != "" {
+			return tokenCookie.Value
+		}
+	}
 	// Look for "access_token" parameter
 	req.ParseMultipartForm(10e6)
 	if tokStr := req.Form.Get("access_token"); tokStr != "" {
+		SetAccessTokenCookie(w, tokStr)
 		return tokStr
-	}
-
-	tokenCookie, err := req.Cookie("access_token")
-	if err == nil {
-		return tokenCookie.Value
 	}
 	return ""
 }
