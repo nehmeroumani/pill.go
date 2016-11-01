@@ -106,15 +106,15 @@ func IsPhoneNumberOwner(phoneNumber string, authCode string, opts ...bool) bool 
 		if accountDetails, err2 := GetAccountDetails(accessToken); err2 == nil {
 			if accountDetails != nil {
 				if national {
-					if accountDetails.Phone.NationalNumber == phoneNumber {
+					if strings.Replace(accountDetails.Phone.NationalNumber, " ", "", -1) == phoneNumber {
 						return true
-					} else if strings.Replace(accountDetails.Phone.NationalNumber, "+", "", -1) == phoneNumber {
+					} else if strings.Replace(strings.Replace(accountDetails.Phone.NationalNumber, "+", "", -1), " ", "", -1) == phoneNumber {
 						return true
 					}
 				} else {
-					if accountDetails.Phone.Number == phoneNumber {
+					if strings.Replace(accountDetails.Phone.Number, " ", "", -1) == phoneNumber {
 						return true
-					} else if strings.Replace(accountDetails.Phone.Number, "+", "", -1) == phoneNumber {
+					} else if strings.Replace(strings.Replace(accountDetails.Phone.Number, "+", "", -1), " ", "", -1) == phoneNumber {
 						return true
 					}
 				}
