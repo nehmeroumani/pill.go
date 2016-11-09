@@ -135,7 +135,7 @@ func RemoveAccessTokenCookie(w http.ResponseWriter) http.ResponseWriter {
 	if secureToken {
 		cookie.Secure = true
 	}
-	cookie.Expires, _ = time.Parse("Thu, 01 Jan 1970 00:00:00 GMT", "Thu, 01 Jan 1970 00:00:00 GMT")
+	cookie.Expires, _ = time.Parse(http.TimeFormat, http.TimeFormat)
 	w.Header().Add("Set-Cookie", cookie.String())
 	return w
 }

@@ -11,7 +11,7 @@ type CloseableResponseWriter interface {
 	http.ResponseWriter
 	Close()
 	SetContentType(string)
-	SetCacheControl(int)
+	SetCacheControl(int, ...bool)
 	SetStatusCode(int)
 }
 
@@ -32,12 +32,9 @@ func (this gzipResponseWriter) SetContentType(contentType string) {
 	this.ResponseWriter.Header().Set("Content-Type", contentType)
 }
 
-func (this gzipResponseWriter) SetCacheControl(TLL int) {
-	if TLL > 0 {
-		this.ResponseWriter.Header().Set("Cache-Control", "private, max-age="+strconv.Itoa(TLL))
-	}
+func (this gzipResponseWriter) SetCacheControl(TLL int, opts ...bool) {
+	setCacheControl(this, TLL, opts...)
 }
-
 func (this gzipResponseWriter) SetStatusCode(statusCode int) {
 	this.ResponseWriter.WriteHeader(statusCode)
 }
@@ -57,10 +54,8 @@ func (this closeableResponseWriter) SetContentType(contentType string) {
 	this.ResponseWriter.Header().Set("Content-Type", contentType)
 }
 
-func (this closeableResponseWriter) SetCacheControl(TLL int) {
-	if TLL > 0 {
-		this.ResponseWriter.Header().Set("Cache-Control", "private, max-age="+strconv.Itoa(TLL))
-	}
+func (this closeableResponseWriter) SetCacheControl(TLL int, opts ...bool) {
+	setCacheControl(this, TLL, opts...)
 }
 
 func (this closeableResponseWriter) SetStatusCode(statusCode int) {
@@ -78,5 +73,19 @@ func GetResponseWriter(w http.ResponseWriter, r *http.Request, contentType strin
 			Writer: gzip.NewWriter(w)}
 	} else {
 		return closeableResponseWriter{ResponseWriter: w}
+	}
+}
+func setCacheControl(crw CloseableResponseWriter, TLL int, opts ...bool) {
+	if TLL > 0 {
+		private := false
+		if opts != nil && len(opts) > 0 {
+			private = opts[0]
+		}
+		cacheControl := ""
+		if private {
+			cacheControl += "private, "
+		}
+		cacheControl += "max-age=" + strconv.Itoa(TLL)
+		crw.Header().Set("Cache-Control", cacheControl)
 	}
 }

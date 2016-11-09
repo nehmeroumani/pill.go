@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 var publicDirPath string
-var cacheTTL int = 30
+var cacheTTL = 60 * 60 * 24 * 7
 
 func InitXServe(PublicDirPath string, CacheTTL ...int) {
 	publicDirPath = PublicDirPath
@@ -18,21 +19,14 @@ func InitXServe(PublicDirPath string, CacheTTL ...int) {
 }
 
 func XServe(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 	var wr CloseableResponseWriter
 	requestedFile := r.URL.Path[8:]
 	f, err := os.Open(publicDirPath + "/" + requestedFile)
-	defer func() {
-		f.Close()
-		r.Body.Close()
-		if wr != nil {
-			wr.Close()
-		}
-	}()
+	defer f.Close()
 	requestedFile = strings.ToLower(requestedFile)
 
 	if err == nil {
-		bufferedReader := bufio.NewReader(f)
-
 		var contentType string
 		if strings.HasSuffix(requestedFile, ".js") {
 			contentType = "text/javascript"
@@ -60,8 +54,27 @@ func XServe(w http.ResponseWriter, r *http.Request) {
 			contentType = "text/plain"
 		}
 		wr = GetResponseWriter(w, r, contentType)
+		defer wr.Close()
 		wr.SetCacheControl(cacheTTL)
-		bufferedReader.WriteTo(wr)
+		cached := false
+		if fileInfo, infoErr := f.Stat(); infoErr == nil {
+			lastModifiedTime := fileInfo.ModTime().UTC()
+			wr.Header().Set("Last-Modified", lastModifiedTime.Format(http.TimeFormat))
+			if modifiedSince := r.Header.Get("If-Modified-Since"); modifiedSince != "" {
+				if modifiedSinceTime, TPErr := time.Parse(http.TimeFormat, modifiedSince); TPErr == nil {
+					modifiedSinceTime = modifiedSinceTime.UTC()
+					if modifiedSinceTime.Equal(lastModifiedTime) {
+						wr.WriteHeader(304)
+						wr.Write([]byte{})
+						cached = true
+					}
+				}
+			}
+		}
+		if !cached {
+			bufferedReader := bufio.NewReader(f)
+			bufferedReader.WriteTo(wr)
+		}
 	} else {
 		w.WriteHeader(404)
 		w.Write([]byte(http.StatusText(404)))
