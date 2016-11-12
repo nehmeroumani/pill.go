@@ -2,9 +2,6 @@ package mux
 
 import (
 	"net/http"
-	"time"
-
-	"fmt"
 
 	"github.com/dimfeld/httptreemux"
 	"github.com/gorilla/context"
@@ -17,16 +14,9 @@ func New() *Mux {
 
 func wrapHandler(h http.Handler) httptreemux.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request, params map[string]string) {
-		startTime := time.Now()
 		context.Set(req, "params", params)
 		defer req.Body.Close()
 		context.ClearHandler(h).ServeHTTP(w, req)
-		defer func() {
-			duration := time.Now().Sub(startTime)
-			fmt.Println(req.Method, " ", req.URL.String())
-			fmt.Println("Request Duration: ", duration.Seconds())
-			fmt.Println("*******************")
-		}()
 	}
 }
 
