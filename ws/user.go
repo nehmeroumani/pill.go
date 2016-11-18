@@ -2,7 +2,6 @@ package ws
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"time"
 
@@ -46,7 +45,6 @@ func (this *User) ReadPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		fmt.Println(string(message))
 	}
 }
 
@@ -64,14 +62,13 @@ func (this *User) WritePump() {
 				this.Write(websocket.CloseMessage, []byte{})
 				return
 			}
-			fmt.Println(message)
 			this.ws.SetWriteDeadline(time.Now().Add(writeWait))
 			w, err := this.ws.NextWriter(websocket.TextMessage)
 			if err != nil {
 				clean.Error(err)
 				return
 			}
-			fmt.Println(w.Write(message))
+			w.Write(message)
 			if err = w.Close(); err != nil {
 				return
 			}
