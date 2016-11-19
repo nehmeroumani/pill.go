@@ -65,11 +65,16 @@ func run() {
 	}
 }
 
-func Send(to []string, subject string, templateName string, data interface{}) {
+func Send(to []string, subject string, templateName string, data interface{}, attachments ...string) {
 	m := gomail.NewMessage()
 	m.SetHeader("From", senderName+" <"+email+">")
 	m.SetHeader("To", to...)
 	m.SetHeader("Subject", subject)
+	if attachments != nil && len(attachments) > 0 {
+		for _, attachment := range attachments {
+			m.Attach(attachment)
+		}
+	}
 	var body bytes.Buffer
 	tmpl := templates.GetTemplate(templateName)
 	if tmpl == nil {

@@ -24,16 +24,21 @@ import (
 )
 
 var (
-	imageExtensions   []string = []string{".jpeg", ".jpg", ".gif", ".png"}
-	imageContentTypes []string = []string{"image/jpeg", "image/jpg", "image/gif", "image/png"}
-
+	imageExtensions   = []string{".jpeg", ".jpg", ".gif", ".png"}
+	imageContentTypes = []string{"image/jpeg", "image/jpg", "image/gif", "image/png"}
 	imageSizes        map[string]map[string][]uint
+
+	pdfContentTypes = []string{"application/pdf", "application/x-pdf", "application/acrobat", "applications/vnd.pdf", "text/pdf", "text/x-pdf"}
+
+	documentExtensions   = []string{".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm"}
+	documentContentTypes = []string{"application/zip", "application/msword", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.wordprocessingml.template", "application/vnd.ms-word.document.macroEnabled.12", "application/vnd.ms-word.template.macroEnabled.12"}
+
 	baseUploadDirPath string
 )
 
 func InitUploader(baseUploadDirectryPath string, imgSizes map[string]map[string][]uint) {
-	baseUploadDirPath = baseUploadDirectryPath
 	imageSizes = imgSizes
+	baseUploadDirPath = baseUploadDirectryPath
 }
 
 type MultipleUpload struct {
@@ -60,7 +65,7 @@ func (this *MultipleUpload) Upload() (error, []string) {
 			fileExtension := filepath.Ext(files[i].Filename)
 			fileExtension = strings.ToLower(fileExtension)
 
-			isValidFileType, fileType := isValidFileType(this.FileType, file, fileExtension)
+			isValidFileType, fileType, fileTypeName := isValidFileType(this.FileType, file, fileExtension)
 
 			if !isValidFileType {
 				return errors.New("invalid_file_type"), nil
@@ -72,7 +77,7 @@ func (this *MultipleUpload) Upload() (error, []string) {
 				return err, nil
 			}
 			randomFileName := generateRandomFileName(fileExtension)
-			if ok, pathErr := CreateaFolderPath(this.uploadDirectoryPath); ok {
+			if ok, pathErr := CreateFolderPath(this.uploadDirectoryPath); ok {
 				out, err := os.Create(filepath.Join(this.uploadDirectoryPath, randomFileName))
 				defer out.Close()
 				if err != nil {
@@ -91,7 +96,7 @@ func (this *MultipleUpload) Upload() (error, []string) {
 					clean.Error(err)
 					return err, nil
 				}
-				if this.FileType == "image" && this.ImageSizes != nil {
+				if fileTypeName == "image" && this.ImageSizes != nil {
 					resizeImg(randomFileName, this.uploadDirectoryPath, this.ImageCategory, this.ImageSizes, file, fileType)
 				}
 				uploadedFilesNames = append(uploadedFilesNames, randomFileName)
@@ -145,7 +150,7 @@ func resizeImg(fileName string, upDirPath string, imageCategory string, targetSi
 		if s, exist := imageSizes[imageCategory]; exist {
 			for _, sizeName := range targetSizes {
 				if size, ok := s[sizeName]; ok {
-					if pathOk, pathErr := CreateaFolderPath(filepath.Join(upDirPath, sizeName)); pathOk {
+					if pathOk, pathErr := CreateFolderPath(filepath.Join(upDirPath, sizeName)); pathOk {
 						m := thumbnail(size[0], size[1], img, resize.Lanczos3)
 						out, err := os.Create(filepath.Join(upDirPath, sizeName, fileName))
 						if err != nil {
@@ -180,30 +185,67 @@ func resizeImg(fileName string, upDirPath string, imageCategory string, targetSi
 	}
 }
 
-func isValidFileType(requiredFileType string, file multipart.File, fileExtension string) (bool, string) {
+func isValidFileType(requiredFileTypesRaw string, file multipart.File, fileExtension string) (bool, string, string) {
 	isValidExtension := false
 	isValidContentType := false
-	fileType := ""
-	switch requiredFileType {
-	case "image":
-		for _, imageExtension := range imageExtensions {
-			if imageExtension == fileExtension {
-				isValidExtension = true
-				break
-			}
-		}
-		if isValidExtension {
-			fileType = detectContentType(file)
-			for _, imageContentType := range imageContentTypes {
-				if fileType == imageContentType {
-					isValidContentType = true
+	fileType := detectContentType(file)
+	fileTypeName := ""
+	requiredFileTypesRaw = strings.ToLower(strings.Replace(requiredFileTypesRaw, " ", "", -1))
+	requiredFileTypes := strings.Split(requiredFileTypesRaw, "|")
+	for _, requiredFileType := range requiredFileTypes {
+		switch requiredFileType {
+		case "image":
+			fileTypeName = "image"
+			for _, imageExtension := range imageExtensions {
+				if imageExtension == fileExtension {
+					isValidExtension = true
 					break
 				}
 			}
+			if isValidExtension {
+				for _, imageContentType := range imageContentTypes {
+					if fileType == imageContentType {
+						isValidContentType = true
+						break
+					}
+				}
+			}
+		case "document":
+			fileTypeName = "document"
+			for _, documentExtension := range documentExtensions {
+				if documentExtension == fileExtension {
+					isValidExtension = true
+					break
+				}
+			}
+			if isValidExtension {
+				for _, documentContentType := range documentContentTypes {
+					if fileType == documentContentType {
+						isValidContentType = true
+						break
+					}
+				}
+			}
+		case "pdf":
+			fileTypeName = "pdf"
+			if fileExtension == ".pdf" {
+				isValidExtension = true
+			}
+			if isValidExtension {
+				for _, pdfContentType := range pdfContentTypes {
+					if fileType == pdfContentType {
+						isValidContentType = true
+						break
+					}
+				}
+			}
 		}
-		return isValidContentType && isValidExtension, fileType
+
+		if isValidExtension {
+			break
+		}
 	}
-	return false, fileType
+	return isValidContentType && isValidExtension, fileType, fileTypeName
 }
 
 func thumbnail(minW uint, minH uint, img image.Image, interp resize.InterpolationFunction) image.Image {
@@ -268,7 +310,7 @@ func thumbnail(minW uint, minH uint, img image.Image, interp resize.Interpolatio
 	return resize.Resize(uint(newWidth), uint(newHeight), img, interp)
 }
 
-func CreateaFolderPath(path string) (bool, error) {
+func CreateFolderPath(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
 		return true, nil
