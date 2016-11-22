@@ -562,57 +562,57 @@ func Timestamp(t *time.Time) int64 {
 	return t.Unix()
 }
 
-func URL(url string, query map[string]string) string {
+func URL(u string, query map[string]string) string {
 	if query != nil && len(query) > 0 {
-		url = strings.TrimSpace(url)
-		if url == "" {
-			url = "/"
+		u = strings.TrimSpace(u)
+		if u == "" {
+			u = "/"
 			firstKey := true
 			for k, v := range query {
 				if firstKey {
-					url += "?"
+					u += "?"
 					firstKey = false
 				} else {
-					url += "&"
+					u += "&"
 				}
-				url += k + "=" + v
+				u += k + "=" + v
 			}
-		} else if strings.HasPrefix(url, "/") {
-			_url := "http://www.example.com" + url
-			u, err := url.Parse(_url)
+		} else if strings.HasPrefix(u, "/") {
+			_u := "http://www.example.com" + u
+			uu, err := url.Parse(_u)
 			if err == nil {
 				firstKey := true
-				if u.RawQuery != "" {
+				if uu.RawQuery != "" {
 					firstKey = false
 				}
 				for k, v := range query {
 					if firstKey {
 						firstKey = false
 					} else {
-						u.RawQuery += "&"
+						uu.RawQuery += "&"
 					}
-					u.RawQuery += k + "=" + v
+					uu.RawQuery += k + "=" + v
 				}
-				url = stings.Replace(u.String(), "http://www.example.com", -1)
+				u = strings.Replace(uu.String(), "http://www.example.com", "", -1)
 			}
 		} else {
-			u, err := url.Parse(_url)
+			uu, err := url.Parse(u)
 			if err == nil {
 				firstKey := true
-				if u.RawQuery != "" {
+				if uu.RawQuery != "" {
 					firstKey = false
 				}
 				for k, v := range query {
 					if firstKey {
 						firstKey = false
 					} else {
-						u.RawQuery += "&"
+						uu.RawQuery += "&"
 					}
-					u.RawQuery += k + "=" + v
+					uu.RawQuery += k + "=" + v
 				}
-				url = u.String()
+				u = uu.String()
 			}
 		}
 	}
-	return url
+	return u
 }
