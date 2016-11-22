@@ -6,6 +6,8 @@ import (
 	"log"
 	"runtime"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 func Error(err error) {
@@ -18,9 +20,9 @@ func Error(err error) {
 
 func getErrDetails(err error, pc uintptr, fn string, line int) string {
 	if err != nil {
-		errString := "\n--------------------------\n"
-		errString += fmt.Sprintf("[error]:\n\nLocation: %s \nFile: %s \nLine: %d \nError: %v", runtime.FuncForPC(pc).Name(), fn, line, err)
-		errString += "\n--------------------------\n"
+		errString := color.RedString("\n--------------------------\n")
+		errString += fmt.Sprintf(color.RedString("[error]:")+"\n\nLocation: %s \nFile: %s \nLine: %d \nError: %v", runtime.FuncForPC(pc).Name(), fn, line, err)
+		errString += color.RedString("\n--------------------------\n")
 		return errString
 	}
 	return ""
@@ -89,7 +91,7 @@ func Map(m map[string]interface{}, includedFields ...string) map[string]interfac
 		if includedFields != nil && len(includedFields) > 0 {
 			cleanedMap := map[string]interface{}{}
 			for k, v := range m {
-				if inArrayStr(k, includedFields){
+				if inArrayStr(k, includedFields) {
 					cleanedMap[k] = v
 				}
 			}
