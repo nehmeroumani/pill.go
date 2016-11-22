@@ -554,10 +554,65 @@ func InversePosition(lisLength int, position int) int {
 }
 
 func TJoin(s ...string) string {
-    // first arg is sep, remaining args are strings to join
-    return strings.Join(s[1:], s[0])
+	// first arg is sep, remaining args are strings to join
+	return strings.Join(s[1:], s[0])
 }
 
-func Timestamp(t *time.Time) int64{
+func Timestamp(t *time.Time) int64 {
 	return t.Unix()
+}
+
+func URL(url string, query map[string]string) string {
+	if query != nil && len(query) > 0 {
+		url = strings.TrimSpace(url)
+		if url == "" {
+			url = "/"
+			firstKey := true
+			for k, v := range query {
+				if firstKey {
+					url += "?"
+					firstKey = false
+				} else {
+					url += "&"
+				}
+				url += k + "=" + v
+			}
+		} else if strings.HasPrefix(url, "/") {
+			_url := "http://www.example.com" + url
+			u, err := url.Parse(_url)
+			if err == nil {
+				firstKey := true
+				if u.RawQuery != "" {
+					firstKey = false
+				}
+				for k, v := range query {
+					if firstKey {
+						firstKey = false
+					} else {
+						u.RawQuery += "&"
+					}
+					u.RawQuery += k + "=" + v
+				}
+				url = stings.Replace(u.String(), "http://www.example.com", -1)
+			}
+		} else {
+			u, err := url.Parse(_url)
+			if err == nil {
+				firstKey := true
+				if u.RawQuery != "" {
+					firstKey = false
+				}
+				for k, v := range query {
+					if firstKey {
+						firstKey = false
+					} else {
+						u.RawQuery += "&"
+					}
+					u.RawQuery += k + "=" + v
+				}
+				url = u.String()
+			}
+		}
+	}
+	return url
 }

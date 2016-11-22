@@ -84,6 +84,7 @@ func RegisterTmplFunc() {
 	AddTmplFunc("Ordinal", Ordinal)
 	AddTmplFunc("First", First)
 	AddTmplFunc("Last", Last)
+	AddTmplFunc("URL", URL)
 	AddTmplFunc("Join", Join)
 	AddTmplFunc("Slice", Slice)
 	AddTmplFunc("Random", Random)
