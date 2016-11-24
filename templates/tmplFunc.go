@@ -565,52 +565,54 @@ func Timestamp(t *time.Time) int64 {
 func URL(u string, query map[string]string) string {
 	if query != nil && len(query) > 0 {
 		u = strings.TrimSpace(u)
-		if u == "" {
-			u = "/"
-			firstKey := true
-			for k, v := range query {
-				if firstKey {
-					u += "?"
-					firstKey = false
-				} else {
-					u += "&"
-				}
-				u += k + "=" + v
-			}
-		} else if strings.HasPrefix(u, "/") {
-			_u := "http://www.example.com" + u
-			uu, err := url.Parse(_u)
-			if err == nil {
+		if !strings.HasPrefix(u, "#") {
+			if u == "" {
+				u = "/"
 				firstKey := true
-				if uu.RawQuery != "" {
-					firstKey = false
-				}
 				for k, v := range query {
 					if firstKey {
+						u += "?"
 						firstKey = false
 					} else {
-						uu.RawQuery += "&"
+						u += "&"
 					}
-					uu.RawQuery += k + "=" + v
+					u += k + "=" + v
 				}
-				u = strings.Replace(uu.String(), "http://www.example.com", "", -1)
-			}
-		} else {
-			uu, err := url.Parse(u)
-			if err == nil {
-				firstKey := true
-				if uu.RawQuery != "" {
-					firstKey = false
-				}
-				for k, v := range query {
-					if firstKey {
+			} else if strings.HasPrefix(u, "/") {
+				_u := "http://www.example.com" + u
+				uu, err := url.Parse(_u)
+				if err == nil {
+					firstKey := true
+					if uu.RawQuery != "" {
 						firstKey = false
-					} else {
-						uu.RawQuery += "&"
 					}
-					uu.RawQuery += k + "=" + v
+					for k, v := range query {
+						if firstKey {
+							firstKey = false
+						} else {
+							uu.RawQuery += "&"
+						}
+						uu.RawQuery += k + "=" + v
+					}
+					u = strings.Replace(uu.String(), "http://www.example.com", "", -1)
 				}
-				u = uu.String()
+			} else {
+				uu, err := url.Parse(u)
+				if err == nil {
+					firstKey := true
+					if uu.RawQuery != "" {
+						firstKey = false
+					}
+					for k, v := range query {
+						if firstKey {
+							firstKey = false
+						} else {
+							uu.RawQuery += "&"
+						}
+						uu.RawQuery += k + "=" + v
+					}
+					u = uu.String()
+				}
 			}
 		}
 	}
