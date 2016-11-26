@@ -18,8 +18,6 @@ import (
 	"image/jpeg"
 	"image/png"
 
-	"fmt"
-
 	"github.com/nehmeroumani/pill.go/clean"
 	"github.com/nfnt/resize"
 	"github.com/oliamb/cutter"
@@ -272,7 +270,7 @@ func isValidFileType(requiredFileTypesRaw string, file multipart.File, fileExten
 			break
 		}
 	}
-	fmt.Println(isValidContentType, isValidExtension, fileType, fileTypeName)
+	//fmt.Println(isValidContentType, isValidExtension, fileType, fileTypeName)
 	return isValidContentType && isValidExtension, fileType, fileTypeName
 }
 
