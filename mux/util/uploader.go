@@ -21,6 +21,8 @@ import (
 	"github.com/nehmeroumani/pill.go/clean"
 	"github.com/nfnt/resize"
 	"github.com/oliamb/cutter"
+	"github.com/tdewolff/minify"
+	"github.com/tdewolff/minify/svg"
 )
 
 var (
@@ -32,6 +34,9 @@ var (
 
 	documentExtensions   = []string{".doc", ".dot", ".docx", ".dotx", ".docm", ".dotm"}
 	documentContentTypes = []string{"application/zip", "application/msword", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.wordprocessingml.template", "application/vnd.ms-word.document.macroEnabled.12", "application/vnd.ms-word.template.macroEnabled.12"}
+
+	svgExtensions   = []string{".svg", ".svgz"}
+	svgContentTypes = []string{"image/svg+xml"}
 
 	baseUploadDirPath string
 )
@@ -85,8 +90,12 @@ func (this *MultipleUpload) Upload() (error, []string) {
 					return err, nil
 				}
 
-				_, err = io.Copy(out, file)
-
+				if fileTypeName == "svg" {
+					svgMinifyer := Minifyer()
+					err = svgMinifyer.Minify("image/svg+xml", out, file)
+				} else {
+					_, err = io.Copy(out, file)
+				}
 				if err != nil {
 					clean.Error(err)
 					return err, nil
@@ -226,6 +235,22 @@ func isValidFileType(requiredFileTypesRaw string, file multipart.File, fileExten
 					}
 				}
 			}
+		case "svg":
+			fileTypeName = "svg"
+			for _, svgExtension := range svgExtensions {
+				if svgExtension == fileExtension {
+					isValidExtension = true
+					break
+				}
+			}
+			if isValidExtension {
+				for _, svgContentType := range svgContentTypes {
+					if fileType == svgContentType {
+						isValidContentType = true
+						break
+					}
+				}
+			}
 		case "pdf":
 			fileTypeName = "pdf"
 			if fileExtension == ".pdf" {
@@ -321,4 +346,10 @@ func CreateFolderPath(path string) (bool, error) {
 		}
 	}
 	return true, err
+}
+
+func Minifyer() *minify.M {
+	m := minify.New()
+	m.AddFunc("image/svg+xml", svg.Minify)
+	return m
 }
