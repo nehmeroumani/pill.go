@@ -18,6 +18,8 @@ import (
 	"image/jpeg"
 	"image/png"
 
+	"fmt"
+
 	"github.com/nehmeroumani/pill.go/clean"
 	"github.com/nfnt/resize"
 	"github.com/oliamb/cutter"
@@ -36,7 +38,7 @@ var (
 	documentContentTypes = []string{"application/zip", "application/msword", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.wordprocessingml.template", "application/vnd.ms-word.document.macroEnabled.12", "application/vnd.ms-word.template.macroEnabled.12"}
 
 	svgExtensions   = []string{".svg", ".svgz"}
-	svgContentTypes = []string{"image/svg+xml"}
+	svgContentTypes = []string{"image/svg+xml", "text/xml", "text/xml; charset=utf-8"}
 
 	baseUploadDirPath string
 )
@@ -270,6 +272,7 @@ func isValidFileType(requiredFileTypesRaw string, file multipart.File, fileExten
 			break
 		}
 	}
+	fmt.Println(isValidContentType, isValidExtension, fileType, fileTypeName)
 	return isValidContentType && isValidExtension, fileType, fileTypeName
 }
 
