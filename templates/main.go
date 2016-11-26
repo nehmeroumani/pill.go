@@ -1,7 +1,9 @@
 package templates
 
 import (
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"text/template"
 
 	"github.com/nehmeroumani/pill.go/clean"
@@ -17,23 +19,39 @@ func Setup(tmplsPath string) {
 	GetTemplates()
 }
 
+func compileTemplates(filePaths []string) (*template.Template, error) {
+	tmpl := template.New("templates")
+	tmpl = tmpl.Funcs(tmplFuncs)
+	for _, filePath := range filePaths {
+		name := filepath.Base(filePath)
+		tmpl = tmpl.New(name)
+
+		b, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			return nil, err
+		}
+		tmpl.Parse(string(b))
+	}
+	return tmpl, nil
+}
+
 //It Read templates files and return it as a value of type Template
 func initializeTemplates() *template.Template {
 	var err error
-	tmpl := template.New("templates")
 
 	templateFolder, _ := os.Open(templatesPath)
 	defer templateFolder.Close()
 
-	templatesPaths := new([]string)
+	templatesPaths := []string{}
 	templatesPathsRaw, _ := templateFolder.Readdir(-1)
 
 	for _, file := range templatesPathsRaw {
 		if !file.IsDir() {
-			*templatesPaths = append(*templatesPaths, templatesPath+"/"+file.Name())
+			templatesPaths = append(templatesPaths, templatesPath+"/"+file.Name())
 		}
 	}
-	tmpl, err = tmpl.Funcs(tmplFuncs).ParseFiles(*templatesPaths...)
+	var tmpl *template.Template
+	tmpl, err = compileTemplates(templatesPaths)
 	if err != nil {
 		clean.Error(err)
 	}
