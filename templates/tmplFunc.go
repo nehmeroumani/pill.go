@@ -576,7 +576,7 @@ func URL(u string, query map[string]string) string {
 					} else {
 						u += "&"
 					}
-					u += k + "=" + v
+					u += k + "=" + url.QueryEscape(v)
 				}
 			} else if strings.HasPrefix(u, "/") {
 				_u := "http://www.example.com" + u
@@ -592,7 +592,7 @@ func URL(u string, query map[string]string) string {
 						} else {
 							uu.RawQuery += "&"
 						}
-						uu.RawQuery += k + "=" + v
+						uu.RawQuery += k + "=" + url.QueryEscape(v)
 					}
 					u = strings.Replace(uu.String(), "http://www.example.com", "", -1)
 				}
@@ -609,7 +609,7 @@ func URL(u string, query map[string]string) string {
 						} else {
 							uu.RawQuery += "&"
 						}
-						uu.RawQuery += k + "=" + v
+						uu.RawQuery += k + "=" + url.QueryEscape(v)
 					}
 					u = uu.String()
 				}
