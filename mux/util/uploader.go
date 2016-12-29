@@ -21,8 +21,6 @@ import (
 	"github.com/nehmeroumani/pill.go/clean"
 	"github.com/nfnt/resize"
 	"github.com/oliamb/cutter"
-	"github.com/tdewolff/minify"
-	"github.com/tdewolff/minify/svg"
 )
 
 var (
@@ -90,12 +88,8 @@ func (this *MultipleUpload) Upload() (error, []string) {
 					return err, nil
 				}
 
-				if fileTypeName == "svg" {
-					svgMinifyer := Minifyer()
-					err = svgMinifyer.Minify("image/svg+xml", out, file)
-				} else {
-					_, err = io.Copy(out, file)
-				}
+				_, err = io.Copy(out, file)
+
 				if err != nil {
 					clean.Error(err)
 					return err, nil
@@ -347,10 +341,4 @@ func CreateFolderPath(path string) (bool, error) {
 		}
 	}
 	return true, err
-}
-
-func Minifyer() *minify.M {
-	m := minify.New()
-	m.AddFunc("image/svg+xml", svg.Minify)
-	return m
 }
