@@ -76,6 +76,19 @@ func SetAccessTokenCookie(w http.ResponseWriter, tokenString string, opts ...boo
 	if opts != nil && len(opts) > 0 {
 		if opts[0] {
 			cookie.Expires = time.Now().Add(time.Hour * tokenDuration)
+			rememberMeCookie := http.Cookie{}
+			rememberMeCookie.Value = "true"
+			rememberMeCookie.Name = "remember_me"
+			rememberMeCookie.HttpOnly = true
+			rememberMeCookie.Path = "/"
+			rememberMeCookie.Expires = time.Now().Add(time.Hour * tokenDuration)
+			if domainName != "" {
+				rememberMeCookie.Domain = domainName
+			}
+			if secureToken {
+				rememberMeCookie.Secure = true
+			}
+			w.Header().Add("Set-Cookie", rememberMeCookie.String())
 		}
 	}
 	w.Header().Add("Set-Cookie", cookie.String())
@@ -112,8 +125,24 @@ func RefreshAccessTokenCookie(w http.ResponseWriter, req *http.Request, userID i
 					tokenWasRefurbishedCookie.Secure = true
 					cookie.Secure = true
 				}
-				if cookie.MaxAge > 0 {
+				rememberMe := false
+				rememberMeCookie, _ := req.Cookie("remember_me")
+				if rememberMeCookie != nil {
+					rememberMe, _ = strconv.ParseBool(rememberMeCookie.Value)
+				}
+				if rememberMe {
 					cookie.Expires = time.Now().Add(time.Hour * tokenDuration)
+					rememberMeCookie.Value = "true"
+					rememberMeCookie.HttpOnly = true
+					rememberMeCookie.Path = "/"
+					rememberMeCookie.Expires = time.Now().Add(time.Hour * tokenDuration)
+					if domainName != "" {
+						rememberMeCookie.Domain = domainName
+					}
+					if secureToken {
+						rememberMeCookie.Secure = true
+					}
+					w.Header().Add("Set-Cookie", rememberMeCookie.String())
 				}
 				w.Header().Add("Set-Cookie", cookie.String())
 				w.Header().Add("Set-Cookie", tokenWasRefurbishedCookie.String())
@@ -136,6 +165,9 @@ func RemoveAccessTokenCookie(w http.ResponseWriter) http.ResponseWriter {
 		cookie.Secure = true
 	}
 	cookie.Expires, _ = time.Parse(http.TimeFormat, http.TimeFormat)
+	w.Header().Add("Set-Cookie", cookie.String())
+	cookie.Name = "remember_me"
+	cookie.Value = "false"
 	w.Header().Add("Set-Cookie", cookie.String())
 	return w
 }
