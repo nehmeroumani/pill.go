@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -12,7 +13,7 @@ var publicDirPath string
 var cacheTTL = 60 * 60 * 24 * 7
 
 func InitXServe(PublicDirPath string, CacheTTL ...int) {
-	publicDirPath = PublicDirPath
+	publicDirPath = filepath.FromSlash(PublicDirPath)
 	if CacheTTL != nil && len(CacheTTL) > 0 {
 		cacheTTL = CacheTTL[0]
 	}
@@ -22,7 +23,7 @@ func XServe(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var wr CloseableResponseWriter
 	requestedFile := r.URL.Path[8:]
-	f, err := os.Open(publicDirPath + "/" + requestedFile)
+	f, err := os.Open(publicDirPath + string(filepath.Separator) + filepath.FromSlash(requestedFile))
 	defer f.Close()
 	requestedFile = strings.ToLower(requestedFile)
 

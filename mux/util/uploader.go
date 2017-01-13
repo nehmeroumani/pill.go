@@ -41,7 +41,7 @@ var (
 
 func InitUploader(baseUploadDirectryPath string, imgSizes map[string]map[string][]uint) {
 	imageSizes = imgSizes
-	baseUploadDirPath = baseUploadDirectryPath
+	baseUploadDirPath = filepath.FromSlash(baseUploadDirectryPath)
 }
 
 type MultipleUpload struct {
@@ -113,6 +113,7 @@ func (this *MultipleUpload) Upload() (error, []string) {
 }
 
 func (this *MultipleUpload) SetUploadDirectoryPath(directoryPath string) {
+	directoryPath = filepath.FromSlash(directoryPath)
 	this.uploadDirectoryPath = filepath.Join(baseUploadDirPath, directoryPath)
 }
 

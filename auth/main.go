@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"path/filepath"
+
 	jwt "github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -27,8 +29,8 @@ var (
 )
 
 func Init(privateKey string, publicKey string, domain string, onlyHTTPS bool, options ...time.Duration) {
-	privateKeyPath = privateKey
-	publicKeyPath = publicKey
+	privateKeyPath = filepath.FromSlash(privateKey)
+	publicKeyPath = filepath.FromSlash(publicKey)
 	domainName = domain
 	secureToken = onlyHTTPS
 	if options != nil {

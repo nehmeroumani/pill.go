@@ -15,7 +15,7 @@ var Templates *template.Template
 var templatesPath string
 
 func Setup(tmplsPath string) {
-	templatesPath = tmplsPath
+	templatesPath = filepath.FromSlash(tmplsPath)
 	GetTemplates()
 }
 
@@ -47,7 +47,7 @@ func initializeTemplates() *template.Template {
 
 	for _, file := range templatesPathsRaw {
 		if !file.IsDir() {
-			templatesPaths = append(templatesPaths, templatesPath+"/"+file.Name())
+			templatesPaths = append(templatesPaths, filepath.Join(templatesPath, file.Name()))
 		}
 	}
 	var tmpl *template.Template
