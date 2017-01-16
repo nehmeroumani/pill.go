@@ -13,14 +13,21 @@ var tmplFuncs template.FuncMap
 var Templates *template.Template
 
 var templatesPath string
+var tmplDelims []string
 
-func Setup(tmplsPath string) {
+func Setup(tmplsPath string, delims ...string) {
 	templatesPath = filepath.FromSlash(tmplsPath)
+	if delims != nil && len(delims) > 1 {
+		tmplDelims = []string{delims[0], delims[1]}
+	}
 	GetTemplates()
 }
 
 func compileTemplates(filePaths []string) (*template.Template, error) {
 	tmpl := template.New("templates")
+	if tmplDelims != nill && len(tmplDelims) > 1 {
+		tmpl = tmpl.Delims(tmplDelims[0], tmplDelims[1])
+	}
 	tmpl = tmpl.Funcs(tmplFuncs)
 	for _, filePath := range filePaths {
 		name := filepath.Base(filePath)
