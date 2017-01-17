@@ -121,6 +121,9 @@ func RegisterTmplFunc() {
 	AddTmplFunc("Timestamp", Timestamp)
 }
 func GetTemplate(templateName string) *template.Template {
+	if Templates == nil {
+		GetTemplates()
+	}
 	if Templates != nil {
 		return Templates.Lookup(templateName)
 	}
