@@ -25,7 +25,7 @@ func Setup(tmplsPath string, delims ...string) {
 
 func compileTemplates(filePaths []string) (*template.Template, error) {
 	tmpl := template.New("templates")
-	if tmplDelims != nill && len(tmplDelims) > 1 {
+	if tmplDelims != nil && len(tmplDelims) > 1 {
 		tmpl = tmpl.Delims(tmplDelims[0], tmplDelims[1])
 	}
 	tmpl = tmpl.Funcs(tmplFuncs)
