@@ -8,7 +8,7 @@ import (
 )
 
 func Username(str string) string {
-	return String(str, "_", regexp.MustCompile(`[?!":;$@\.,/()\[\]{}#%^*|~<>€£¥•]`))
+	return String(str, "_", regexp.MustCompile(`[^A-Za-z0-9\_\.\-]`))
 }
 
 func URLPath(str string) string {
@@ -113,6 +113,8 @@ var (
 	dashes = regexp.MustCompile(`[\-]+`)
 
 	underscores = regexp.MustCompile(`[\_]+`)
+
+	dots = regexp.MustCompile(`[\.]+`)
 )
 
 // cleanString replaces separators with - and removes characters listed in the regexp provided from string.
@@ -132,11 +134,9 @@ func String(s string, separator string, r *regexp.Regexp) string {
 	s = r.ReplaceAllString(s, "")
 
 	// Remove any multiple separator caused by replacements above
-	if separator == "-" {
-		s = dashes.ReplaceAllString(s, "-")
-	} else if separator == "_" {
-		s = underscores.ReplaceAllString(s, "_")
-	}
+	s = dashes.ReplaceAllString(s, "-")
+	s = underscores.ReplaceAllString(s, "_")
+	s = dots.ReplaceAllString(s, ".")
 
 	return s
 }
