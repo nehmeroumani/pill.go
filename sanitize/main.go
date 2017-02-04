@@ -7,7 +7,12 @@ import (
 	"strings"
 )
 
-func Username(str string) string {
+func Username(str string, withoutSeperators ...bool) string {
+	if withoutSeperators != nil && len(withoutSeperators) > 0 {
+		if withoutSeperators[0] {
+			return String(str, "", regexp.MustCompile(`[^A-Za-z0-9]`))
+		}
+	}
 	return String(str, "_", regexp.MustCompile(`[^A-Za-z0-9\_\.\-]`))
 }
 
