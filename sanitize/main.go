@@ -120,6 +120,8 @@ var (
 	underscores = regexp.MustCompile(`[\_]+`)
 
 	dots = regexp.MustCompile(`[\.]+`)
+
+	spaces = regexp.MustCompile(`[ ]+`)
 )
 
 // cleanString replaces separators with - and removes characters listed in the regexp provided from string.
@@ -144,6 +146,10 @@ func String(s string, separator string, r *regexp.Regexp) string {
 	s = dots.ReplaceAllString(s, ".")
 
 	return s
+}
+
+func Name(s string) string{
+	return strings.TrimSpace(spaces.ReplaceAllString(StripTags(s), " "))
 }
 
 func Time(h int, m int, pmOrAm string) (bool, float64) {
