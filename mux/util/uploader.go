@@ -1,12 +1,14 @@
 package util
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -21,6 +23,7 @@ import (
 	"github.com/nehmeroumani/pill.go/clean"
 	"github.com/nfnt/resize"
 	"github.com/oliamb/cutter"
+	"github.com/parnurzeal/gorequest"
 )
 
 var (
@@ -49,6 +52,7 @@ type MultipleUpload struct {
 	FormData            *multipart.Form
 	FilesInputName      string
 	FileType            string
+	Urls                []string
 	ImageSizes          []string
 	ImageCategory       string
 }
@@ -68,7 +72,14 @@ func (this *MultipleUpload) Upload() (error, []string) {
 			fileExtension := filepath.Ext(files[i].Filename)
 			fileExtension = strings.ToLower(fileExtension)
 
-			isValidFileType, fileType, fileTypeName := isValidFileType(this.FileType, file, fileExtension)
+			fileData := make([]byte, 512)
+			_, err = file.Read(fileData)
+			if err != nil {
+				clean.Error(err)
+				return err, nil
+			}
+
+			isValidFileType, fileType, fileTypeName := isValidFileType(this.FileType, fileData, fileExtension)
 
 			if !isValidFileType {
 				return errors.New("invalid_file_type"), nil
@@ -112,6 +123,71 @@ func (this *MultipleUpload) Upload() (error, []string) {
 	return errors.New("invalid multipartform"), nil
 }
 
+func (this *MultipleUpload) UploadFromUrls() (error, []string) {
+	if this.Urls != nil {
+		uploadedFilesNames := []string{}
+		for _, u := range this.Urls {
+			request := gorequest.New()
+			resp, body, errs := request.Get(u).End()
+			if errs != nil && len(errs) > 0 {
+				clean.Error(errs[0])
+			}
+			if body == "" {
+				return errors.New("file_not_found"), nil
+			}
+			fileURL, err := url.Parse(u)
+
+			if err != nil {
+				clean.Error(err)
+				return errors.New("invalid_file_url"), nil
+			}
+
+			path := fileURL.Path
+
+			segments := strings.Split(path, "/")
+
+			var fileExtension string
+			if segments != nil && len(segments) > 0 {
+				fileExtension = filepath.Ext(segments[len(segments)-1])
+			}
+			fileExtension = strings.ToLower(fileExtension)
+
+			isValidFileType, fileType, fileTypeName := isValidFileType(this.FileType, []byte(body), fileExtension)
+
+			if !isValidFileType {
+				return errors.New("invalid_file_type"), nil
+			}
+
+			randomFileName := generateRandomFileName(fileExtension)
+			if ok, pathErr := CreateFolderPath(this.uploadDirectoryPath); ok {
+				bufr := bytes.NewReader([]byte(body))
+				out, err := os.Create(filepath.Join(this.uploadDirectoryPath, randomFileName))
+				defer out.Close()
+				if err != nil {
+					clean.Error(errors.New("Unable to create the file for writing. Check your write access privilege : " + err.Error()))
+					return err, nil
+				}
+
+				_, err = io.Copy(out, bufr)
+
+				if err != nil {
+					clean.Error(err)
+					return err, nil
+				}
+				bufr.Seek(0, 0)
+				if fileTypeName == "image" && this.ImageSizes != nil {
+					resizeImg(randomFileName, this.uploadDirectoryPath, this.ImageCategory, this.ImageSizes, resp.Body, fileType)
+				}
+				uploadedFilesNames = append(uploadedFilesNames, randomFileName)
+			} else {
+				return pathErr, nil
+			}
+		}
+		return nil, uploadedFilesNames
+	}
+	return errors.New("invalid_file_url"), nil
+}
+
 func (this *MultipleUpload) SetUploadDirectoryPath(directoryPath string) {
 	directoryPath = filepath.FromSlash(directoryPath)
 	this.uploadDirectoryPath = filepath.Join(baseUploadDirPath, directoryPath)
@@ -127,26 +203,17 @@ func generateRandomFileName(extension string) string {
 	return strconv.Itoa(int(time.Now().UTC().Unix())) + "-" + hex.EncodeToString(randBytes) + extension
 }
 
-func detectContentType(file multipart.File) string {
-	if file != nil {
-		buff := make([]byte, 512)
-		_, err := file.Read(buff)
-		if err != nil {
-			clean.Error(err)
-			return ""
-		}
-		filetype := http.DetectContentType(buff)
+func detectContentType(fileData []byte) string {
+	if fileData != nil {
+		filetype := http.DetectContentType(fileData)
 		return filetype
 	}
 	return ""
 }
 
-func resizeImg(fileName string, upDirPath string, imageCategory string, targetSizes []string, file multipart.File, fileType string) {
+func resizeImg(fileName string, upDirPath string, imageCategory string, targetSizes []string, file io.Reader, fileType string) {
 	if file != nil && fileType != "" && fileName != "" && upDirPath != "" && imageSizes != nil {
-		var img image.Image
-		var err error
-		img, _, err = image.Decode(file)
-		defer file.Close()
+		img, _, err := image.Decode(file)
 		if err != nil {
 			clean.Error(err)
 			return
@@ -189,10 +256,10 @@ func resizeImg(fileName string, upDirPath string, imageCategory string, targetSi
 	}
 }
 
-func isValidFileType(requiredFileTypesRaw string, file multipart.File, fileExtension string) (bool, string, string) {
+func isValidFileType(requiredFileTypesRaw string, fileData []byte, fileExtension string) (bool, string, string) {
 	isValidExtension := false
 	isValidContentType := false
-	fileType := detectContentType(file)
+	fileType := detectContentType(fileData)
 	fileTypeName := ""
 	requiredFileTypesRaw = strings.ToLower(strings.Replace(requiredFileTypesRaw, " ", "", -1))
 	requiredFileTypes := strings.Split(requiredFileTypesRaw, "|")
