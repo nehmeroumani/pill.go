@@ -44,15 +44,17 @@ func SendSms(to, body string) *SmsResponse {
 
 	// Make request
 	resp, _ := client.Do(req)
-	defer resp.Body.Close()
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		smsResponse := &SmsResponse{}
-		bodyBytes, _ := ioutil.ReadAll(resp.Body)
-		err := json.Unmarshal(bodyBytes, smsResponse)
-		if err == nil {
-			return smsResponse
-		} else {
-			clean.Error(err)
+	if resp != nil {
+		defer resp.Body.Close()
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			smsResponse := &SmsResponse{}
+			bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			err := json.Unmarshal(bodyBytes, smsResponse)
+			if err == nil {
+				return smsResponse
+			} else {
+				clean.Error(err)
+			}
 		}
 	}
 	return nil
