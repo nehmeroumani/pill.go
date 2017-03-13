@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/nehmeroumani/pill.go/clean"
+	"github.com/nehmeroumani/pill.go/sanitize"
 )
 
 // recovery will silently swallow all unexpected panics.
@@ -100,10 +101,13 @@ func ToJSON(toBeJSON interface{}) string {
 	return string(json[:])
 }
 
-func Replace(s1 string, s2 string) string {
+func Replace(s1 string, s2 string, opt ...string) string {
 	defer recovery()
-
-	return strings.Replace(s2, s1, "", -1)
+	n := ""
+	if opt != nil && len(opt) > 0 {
+		n = opt[0]
+	}
+	return strings.Replace(s1, s2, n, -1)
 }
 func NewLineToBreak(s string) string {
 	defer recovery()
@@ -617,4 +621,7 @@ func URL(u string, query map[string]string) string {
 		}
 	}
 	return u
+}
+func URLPath(u string) string {
+	return sanitize.URLPath(u)
 }
