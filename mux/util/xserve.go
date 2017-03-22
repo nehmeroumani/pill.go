@@ -51,6 +51,8 @@ func XServe(w http.ResponseWriter, r *http.Request) {
 			contentType = "image/svg+xml"
 		} else if strings.HasSuffix(requestedFile, ".eot") {
 			contentType = "application/vnd.ms-fontobject"
+		} else if strings.HasSuffix(requestedFile, ".pdf") {
+			contentType = "application/pdf"
 		} else {
 			contentType = "text/plain"
 		}
