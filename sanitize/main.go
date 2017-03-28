@@ -148,7 +148,7 @@ func String(s string, separator string, r *regexp.Regexp) string {
 	return s
 }
 
-func Name(s string) string{
+func Name(s string) string {
 	return strings.TrimSpace(spaces.ReplaceAllString(StripTags(s), " "))
 }
 
@@ -185,4 +185,40 @@ func Time(h int, m int, pmOrAm string) (bool, float64) {
 		return false, 0
 	}
 	return false, 0
+}
+
+func YoutubeVideoID(url string) string {
+	if url != "" {
+		r, _ := regexp.Compile(`youtube\.com\/watch\?v=([^\&\?\/]+)`)
+		for i, v := range r.FindStringSubmatch(url) {
+			if i == 1 {
+				return v
+			}
+		}
+		r, _ = regexp.Compile(`youtube\.com\/embed\/([^\&\?\/]+)`)
+		for i, v := range r.FindStringSubmatch(url) {
+			if i == 1 {
+				return v
+			}
+		}
+		r, _ = regexp.Compile(`youtube\.com\/v\/([^\&\?\/]+)`)
+		for i, v := range r.FindStringSubmatch(url) {
+			if i == 1 {
+				return v
+			}
+		}
+		r, _ = regexp.Compile(`youtu\.be\/([^\&\?\/]+)`)
+		for i, v := range r.FindStringSubmatch(url) {
+			if i == 1 {
+				return v
+			}
+		}
+		r, _ = regexp.Compile(`youtube\.com\/verify_age\?next_url=\/watch%3Fv%3D([^\&\?\/]+)`)
+		for i, v := range r.FindStringSubmatch(url) {
+			if i == 1 {
+				return v
+			}
+		}
+	}
+	return ""
 }

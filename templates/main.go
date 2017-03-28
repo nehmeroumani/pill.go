@@ -120,6 +120,7 @@ func RegisterTmplFunc() {
 	AddTmplFunc("TJoin", TJoin)
 	AddTmplFunc("Timestamp", Timestamp)
 	AddTmplFunc("URLPath", URLPath)
+	AddTmplFunc("YoutubeVideoID", YoutubeVideoID)
 }
 func GetTemplate(templateName string) *template.Template {
 	if Templates == nil {

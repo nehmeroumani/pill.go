@@ -625,3 +625,7 @@ func URL(u string, query map[string]string) string {
 func URLPath(u string) string {
 	return sanitize.URLPath(u)
 }
+
+func YoutubeVideoID(url string) string {
+	return sanitize.YoutubeVideoID(url)
+}
