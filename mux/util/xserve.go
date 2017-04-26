@@ -39,6 +39,8 @@ func XServe(w http.ResponseWriter, r *http.Request) {
 			contentType = "image/png"
 		} else if strings.HasSuffix(requestedFile, ".jpeg") {
 			contentType = "image/jpeg"
+		} else if strings.HasSuffix(requestedFile, ".gif") {
+			contentType = "image/gif"
 		} else if strings.HasSuffix(requestedFile, ".mp3") {
 			contentType = "audio/mpeg"
 		} else if strings.HasSuffix(requestedFile, ".ogg") {
