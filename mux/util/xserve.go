@@ -55,6 +55,14 @@ func XServe(w http.ResponseWriter, r *http.Request) {
 			contentType = "application/vnd.ms-fontobject"
 		} else if strings.HasSuffix(requestedFile, ".pdf") {
 			contentType = "application/pdf"
+		} else if strings.HasSuffix(requestedFile, ".ipa") {
+			contentType = "application/octet-stream"
+		} else if strings.HasSuffix(requestedFile, ".html") {
+			contentType = "text/html"
+		} else if strings.HasSuffix(requestedFile, ".plist") {
+			contentType = "application/x-plist"
+		} else if strings.HasSuffix(requestedFile, ".apk") {
+			contentType = "application/vnd.android.package-archive"
 		} else {
 			contentType = "text/plain"
 		}
