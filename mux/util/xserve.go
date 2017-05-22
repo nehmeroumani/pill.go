@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -25,6 +26,7 @@ func XServe(w http.ResponseWriter, r *http.Request) {
 	requestedFile := r.URL.Path[8:]
 	f, err := os.Open(publicDirPath + string(filepath.Separator) + filepath.FromSlash(requestedFile))
 	defer f.Close()
+
 	requestedFile = strings.ToLower(requestedFile)
 
 	if err == nil {
@@ -69,6 +71,7 @@ func XServe(w http.ResponseWriter, r *http.Request) {
 		wr = GetResponseWriter(w, r, contentType)
 		defer wr.Close()
 		wr.SetCacheControl(cacheTTL)
+		wr.Header().Set("Content-Length", strconv.FormatInt(f.Size(), 10))
 		cached := false
 		if fileInfo, infoErr := f.Stat(); infoErr == nil {
 			lastModifiedTime := fileInfo.ModTime().UTC()
