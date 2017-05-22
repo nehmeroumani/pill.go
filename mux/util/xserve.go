@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -71,9 +70,9 @@ func XServe(w http.ResponseWriter, r *http.Request) {
 		wr = GetResponseWriter(w, r, contentType)
 		defer wr.Close()
 		wr.SetCacheControl(cacheTTL)
-		if fi, e := f.Stat(); e == nil {
-			wr.Header().Set("Content-Length", strconv.FormatInt(fi.Size(), 10))
-		}
+		// if fi, e := f.Stat(); e == nil {
+		// 	wr.Header().Set("Content-Length", strconv.FormatInt(fi.Size(), 10))
+		// }
 		cached := false
 		if fileInfo, infoErr := f.Stat(); infoErr == nil {
 			lastModifiedTime := fileInfo.ModTime().UTC()
