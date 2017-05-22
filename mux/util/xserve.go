@@ -22,7 +22,6 @@ func InitXServe(PublicDirPath string, CacheTTL ...int) {
 
 func XServe(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var wr CloseableResponseWriter
 	requestedFile := r.URL.Path[8:]
 	f, err := os.Open(publicDirPath + string(filepath.Separator) + filepath.FromSlash(requestedFile))
 	defer f.Close()
@@ -88,7 +87,7 @@ func XServe(w http.ResponseWriter, r *http.Request) {
 		}
 		if !cached {
 			bufferedReader := bufio.NewReader(f)
-			bufferedReader.WriteTo(wr)
+			bufferedReader.WriteTo(w)
 		}
 	} else {
 		w.WriteHeader(404)
