@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -67,22 +68,19 @@ func XServe(w http.ResponseWriter, r *http.Request) {
 		} else {
 			contentType = "text/plain"
 		}
-		wr = GetResponseWriter(w, r, contentType)
-		defer wr.Close()
-		wr.SetCacheControl(cacheTTL)
-		// if fi, e := f.Stat(); e == nil {
-		// 	wr.Header().Set("Content-Length", strconv.FormatInt(fi.Size(), 10))
-		// }
+		w.Header().Set("Content-Type", contentType)
+		setResponseWriterCacheControl(w, cacheTTL)
 		cached := false
 		if fileInfo, infoErr := f.Stat(); infoErr == nil {
+			w.Header().Set("Content-Length", strconv.FormatInt(fileInfo.Size(), 10))
 			lastModifiedTime := fileInfo.ModTime().UTC()
-			wr.Header().Set("Last-Modified", lastModifiedTime.Format(http.TimeFormat))
+			w.Header().Set("Last-Modified", lastModifiedTime.Format(http.TimeFormat))
 			if modifiedSince := r.Header.Get("If-Modified-Since"); modifiedSince != "" {
 				if modifiedSinceTime, TPErr := time.Parse(http.TimeFormat, modifiedSince); TPErr == nil {
 					modifiedSinceTime = modifiedSinceTime.UTC()
 					if modifiedSinceTime.Equal(lastModifiedTime) {
-						wr.WriteHeader(304)
-						wr.Write([]byte{})
+						w.WriteHeader(304)
+						w.Write([]byte{})
 						cached = true
 					}
 				}

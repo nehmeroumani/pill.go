@@ -89,3 +89,17 @@ func setCacheControl(crw CloseableResponseWriter, TLL int, opts ...bool) {
 		crw.Header().Set("Cache-Control", cacheControl)
 	}
 }
+func setResponseWriterCacheControl(w http.ResponseWriter, TLL int, opts ...bool) {
+	if TLL > 0 {
+		private := false
+		if opts != nil && len(opts) > 0 {
+			private = opts[0]
+		}
+		cacheControl := ""
+		if private {
+			cacheControl += "private, "
+		}
+		cacheControl += "max-age=" + strconv.Itoa(TLL)
+		w.Header().Set("Cache-Control", cacheControl)
+	}
+}
