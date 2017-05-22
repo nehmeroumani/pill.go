@@ -36,9 +36,9 @@ func (this gzipResponseWriter) SetCacheControl(TLL int, opts ...bool) {
 	setCacheControl(this, TLL, opts...)
 }
 func (this gzipResponseWriter) SetStatusCode(statusCode int) {
+	this.Header().Del("Content-Length")
 	this.ResponseWriter.WriteHeader(statusCode)
 }
-
 func (this gzipResponseWriter) Header() http.Header {
 	return this.ResponseWriter.Header()
 }
@@ -61,7 +61,6 @@ func (this closeableResponseWriter) SetCacheControl(TLL int, opts ...bool) {
 func (this closeableResponseWriter) SetStatusCode(statusCode int) {
 	this.ResponseWriter.WriteHeader(statusCode)
 }
-
 func GetResponseWriter(w http.ResponseWriter, r *http.Request, contentType string) CloseableResponseWriter {
 	if contentType != "" {
 		w.Header().Set("Content-Type", contentType)
