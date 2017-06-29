@@ -7,11 +7,12 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/dancannon/gorethink"
 	"github.com/fatih/color"
 )
 
 func Error(err error) {
-	if err != nil {
+	if err != nil && err != gorethink.ErrEmptyResult {
 		pc, fn, line, _ := runtime.Caller(1)
 		errString := getErrDetails(err, pc, fn, line)
 		log.Println(errString)
