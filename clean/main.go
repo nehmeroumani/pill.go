@@ -9,10 +9,11 @@ import (
 
 	"github.com/dancannon/gorethink"
 	"github.com/fatih/color"
+	"github.com/jackc/pgx"
 )
 
 func Error(err error) {
-	if err != nil && err != gorethink.ErrEmptyResult {
+	if err != nil && err != gorethink.ErrEmptyResult && err != pgx.ErrNoRows {
 		pc, fn, line, _ := runtime.Caller(1)
 		errString := getErrDetails(err, pc, fn, line)
 		log.Println(errString)
