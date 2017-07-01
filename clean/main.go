@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/dancannon/gorethink"
-	"github.com/fatih/color"
 	"github.com/jackc/pgx"
 )
 
@@ -22,9 +21,9 @@ func Error(err error) {
 
 func getErrDetails(err error, pc uintptr, fn string, line int) string {
 	if err != nil {
-		errString := color.RedString("\n--------------------------\n")
-		errString += fmt.Sprintf(color.RedString("[error]:")+"\n\nLocation: %s \nFile: %s \nLine: %d \nError: %v", runtime.FuncForPC(pc).Name(), fn, line, err)
-		errString += color.RedString("\n--------------------------\n")
+		errString := "\n--------------------------\n"
+		errString += fmt.Sprintf("[error]:\n\nLocation: %s \nFile: %s \nLine: %d \nError: %v", runtime.FuncForPC(pc).Name(), fn, line, err)
+		errString += "\n--------------------------\n"
 		return errString
 	}
 	return ""
