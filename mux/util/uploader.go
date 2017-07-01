@@ -55,6 +55,7 @@ type MultipleUpload struct {
 	Urls                []string
 	ImageSizes          []string
 	ImageCategory       string
+	UploadToCloud       bool
 }
 
 func (this *MultipleUpload) Upload() (error, []string) {
