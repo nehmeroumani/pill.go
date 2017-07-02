@@ -25,7 +25,7 @@ type Client struct {
 var client *Client
 var jsonKeyPath, projectID string
 
-func InitGCS(ProjectID, JSONKeyPath string) {
+func Init(ProjectID, JSONKeyPath string) {
 	projectID = ProjectID
 	jsonKeyPath = JSONKeyPath
 }

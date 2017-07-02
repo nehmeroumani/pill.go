@@ -37,7 +37,7 @@ var (
 	baseLocalPath, baseCloudPath string
 )
 
-func InitUploader(BaseLocalPath string, BaseCloudPath string, imgSizes map[string]map[string][]uint) {
+func Init(BaseLocalPath string, BaseCloudPath string, imgSizes map[string]map[string][]uint) {
 	imageSizes = imgSizes
 	baseLocalPath = filepath.FromSlash(BaseLocalPath)
 	baseCloudPath = filepath.FromSlash(BaseCloudPath)
