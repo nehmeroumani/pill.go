@@ -2,7 +2,6 @@ package util
 
 import (
 	"bufio"
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -49,7 +48,6 @@ func XServe(w http.ResponseWriter, r *http.Request) {
 			u.RawQuery += "app_version=" + url.QueryEscape(appVersion)
 			requestedFile = strings.Replace(u.String(), d, "", -1)
 		}
-		fmt.Println(requestedFile)
 		http.Redirect(w, r, publicCloudUrlPath+"/"+requestedFile, 307)
 	} else {
 		f, err := os.Open(publicLocalPath + string(filepath.Separator) + filepath.FromSlash(requestedFile))
