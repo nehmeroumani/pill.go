@@ -2,7 +2,9 @@ package util
 
 import (
 	"bufio"
+	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -10,7 +12,7 @@ import (
 	"time"
 )
 
-var publicLocalPath, publicCloudUrlPath string
+var publicLocalPath, publicCloudUrlPath, appVersion string
 var filesFromCloud bool
 var cacheTTL = 60 * 60 * 24 * 7
 
@@ -28,7 +30,7 @@ func InitXServe(PublicLocalPath string, opts ...interface{}) {
 				filesFromCloud = opts[1].(bool)
 			}
 			if len(opts) > 2 {
-				cacheTTL = opts[2].(int)
+				appVersion = opts[2].(string)
 			}
 		}
 	}
@@ -37,8 +39,18 @@ func InitXServe(PublicLocalPath string, opts ...interface{}) {
 func XServe(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	requestedFile := r.URL.Path[8:]
-	if filesFromCloud && publicCloudUrlPath != ""{
-		http.Redirect(w, r, publicCloudUrlPath+"/"+requestedFile, 301)
+	if filesFromCloud && publicCloudUrlPath != "" {
+		d := "http://www.example.com/"
+		u, err := url.Parse(d + requestedFile)
+		if err == nil {
+			if u.RawQuery != "" {
+				u.RawQuery += "&"
+			}
+			u.RawQuery += "app_version=" + url.QueryEscape(appVersion)
+			requestedFile = strings.Replace(u.String(), d, "", -1)
+		}
+		fmt.Println(requestedFile)
+		http.Redirect(w, r, publicCloudUrlPath+"/"+requestedFile, 307)
 	} else {
 		f, err := os.Open(publicLocalPath + string(filepath.Separator) + filepath.FromSlash(requestedFile))
 		defer f.Close()
