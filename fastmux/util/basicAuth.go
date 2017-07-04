@@ -5,23 +5,18 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/nehmeroumani/pill.go/helpers"
 	"github.com/valyala/fasthttp"
 )
 
 func GetBasicAuthData(requestCtx *fasthttp.RequestCtx, customHeader ...string) (string, string) {
 	authorization := ""
-	if len(requestCtx.Request.Header) > 0 {
-		header := "Authorization"
-		if customHeader != nil && len(customHeader) > 0 {
-			header = customHeader[0]
-		}
-		if requestCtx.Request.Header[header] != nil && len(requestCtx.Request.Header[header]) > 0 {
-			authorization = requestCtx.Request.Header[header][0]
-		} else {
-			requestCtx.Error("authorization failed", http.StatusUnauthorized)
-			return "", ""
-		}
-	} else {
+	header := "Authorization"
+	if customHeader != nil && len(customHeader) > 0 {
+		header = customHeader[0]
+	}
+	authorization = helpers.BytesToString(requestCtx.Request.Header.Peek(header))
+	if authorization == "" {
 		requestCtx.Error("authorization failed", http.StatusUnauthorized)
 		return "", ""
 	}

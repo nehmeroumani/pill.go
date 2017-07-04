@@ -118,7 +118,7 @@ func XServe(requestCtx *fasthttp.RequestCtx) {
 			}
 			if !cached {
 				bufferedReader := bufio.NewReader(f)
-				bufferedReader.WriteTo(w)
+				bufferedReader.WriteTo(requestCtx.Response.BodyWriter())
 			}
 		} else {
 			requestCtx.SetStatusCode(404)

@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/nehmeroumani/pill.go/clean"
+	"github.com/nehmeroumani/pill.go/helpers"
+	"github.com/valyala/fasthttp"
 )
 
 const (
@@ -144,6 +146,30 @@ func (this *CSRFToken) SetCookie(w http.ResponseWriter) http.ResponseWriter {
 	return w
 }
 
+func (this *CSRFToken) SetFastHttpCookie(requestCtx *fasthttp.RequestCtx) {
+	cookie := &fasthttp.Cookie{}
+	cookie.SetKey(tokenCookieName)
+	if encryptedToken {
+		cookieValue, err := encrypt([]byte(encryptionKey), this.RealToken)
+		if err != nil {
+			clean.Error(err)
+			return
+		}
+		cookie.SetValue(cookieValue)
+	} else {
+		cookie.SetValue(base64.StdEncoding.EncodeToString([]byte(this.RealToken)))
+	}
+	cookie.SetHTTPOnly(true)
+	cookie.SetPath("/")
+	if domainName != "" {
+		cookie.SetDomain(domainName)
+	}
+	if secureToken {
+		cookie.SetSecure(true)
+	}
+	requestCtx.Response.Header.SetCookie(cookie)
+}
+
 func (this *CSRFToken) HTMLInput() string {
 	if this.MaskedToken == "" {
 		this.WithMask()
@@ -222,6 +248,56 @@ func GetRequestCSRFToken(r *http.Request) *CSRFToken {
 		var err3 error
 		if realToken, err3 = decrypt([]byte(encryptionKey), realToken); err3 != nil {
 			clean.Error(err3)
+			return nil
+		}
+	}
+	csrfToken := &CSRFToken{}
+	csrfToken.RealToken = realToken
+	csrfToken.MaskedToken = string(decodedRequestToken)
+	return csrfToken
+}
+
+func GetFastHttpRequestCSRFToken(requestCtx *fasthttp.RequestCtx) *CSRFToken {
+	// 1. Check the HTTP header first.
+	requestToken := helpers.BytesToString(requestCtx.Request.Header.Peek(tokenRequestHeader))
+
+	// 2. Fall back to the POST (form) value.
+	if requestToken == "" {
+		requestToken = helpers.BytesToString(requestCtx.PostArgs().Peek(tokenFieldName))
+	}
+
+	// 3. Finally, fall back to the multipart form (if set).
+	if requestToken == "" {
+		if multipartForm, err := requestCtx.MultipartForm(); err == nil {
+			if vals, ok := multipartForm.Value[tokenFieldName]; ok {
+				if len(vals) > 0 {
+					requestToken = vals[0]
+				}
+			}
+		}
+	}
+
+	// Decode the "issued" (pad + masked) token sent in the request. Return a
+	// nil byte slice on a decoding error (this will fail upstream).
+	decodedRequestToken, _ := base64.StdEncoding.DecodeString(requestToken)
+
+	realTokenCookie := requestCtx.Request.Header.Cookie(tokenCookieName)
+	if realTokenCookie == nil {
+		return nil
+	}
+	realToken := string(realTokenCookie)
+	if !encryptedToken {
+		decodedRealToken, err := base64.StdEncoding.DecodeString(realToken)
+		if err != nil {
+			clean.Error(err)
+			return nil
+		}
+		realToken = string(decodedRealToken)
+	}
+	if encryptedToken {
+		var e error
+		if realToken, e = decrypt([]byte(encryptionKey), realToken); e != nil {
+			clean.Error(e)
 			return nil
 		}
 	}
