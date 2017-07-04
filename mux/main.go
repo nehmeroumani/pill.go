@@ -15,7 +15,10 @@ func New() *Mux {
 func wrapHandler(h http.Handler) httptreemux.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request, params map[string]string) {
 		context.Set(req, "params", params)
-		defer req.Body.Close()
+		defer func() {
+			req.Body.Close()
+			req.Header.Set("Connection", "close")
+		}()
 		context.ClearHandler(h).ServeHTTP(w, req)
 	}
 }
