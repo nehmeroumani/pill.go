@@ -28,6 +28,7 @@ var jsonKeyPath, projectID string
 func Init(ProjectID, JSONKeyPath string) {
 	projectID = ProjectID
 	jsonKeyPath = JSONKeyPath
+	client = GetClient()
 }
 
 func GetClient() *Client {
@@ -43,11 +44,12 @@ func GetClient() *Client {
 		client.gcsClient, err = storage.NewClient(ctx, option.WithServiceAccountFile(jsonKeyPath))
 		if err != nil {
 			clean.Error(err)
-			return nil
+			os.Exit(1)
 		}
 		client.bucketsList, err = client.BucketsList()
 		if err != nil {
 			clean.Error(err)
+			os.Exit(1)
 		}
 	}
 	return client
