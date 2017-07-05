@@ -34,7 +34,7 @@ func Init(ProjectID, JSONKeyPath string) {
 func GetClient() *Client {
 	if jsonKeyPath == "" || projectID == "" {
 		fmt.Println("Google Cloud Storage requires the json key with the project id.")
-		os.Exit(1)
+		os.Exit(0)
 	}
 	if client == nil {
 		client = &Client{ProjectID: projectID}
@@ -44,12 +44,12 @@ func GetClient() *Client {
 		client.gcsClient, err = storage.NewClient(ctx, option.WithServiceAccountFile(jsonKeyPath))
 		if err != nil {
 			clean.Error(err)
-			os.Exit(1)
+			os.Exit(0)
 		}
 		client.bucketsList, err = client.BucketsList()
 		if err != nil {
 			clean.Error(err)
-			os.Exit(1)
+			os.Exit(0)
 		}
 	}
 	return client
