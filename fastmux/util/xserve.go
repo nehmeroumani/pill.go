@@ -39,7 +39,6 @@ func InitXServe(PublicLocalPath string, opts ...interface{}) {
 }
 
 func XServe(requestCtx *fasthttp.RequestCtx) {
-	defer requestCtx.ResetBody()
 	path := helpers.BytesToString(requestCtx.Path())
 	requestedFile := path[8:]
 	if filesFromCloud && publicCloudUrlPath != "" {
