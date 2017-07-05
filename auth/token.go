@@ -77,7 +77,7 @@ func GetTokenFromFastHttpRequest(requestCtx *fasthttp.RequestCtx) string {
 	}
 	// Look for "access_token" parameter
 	if tokStr := helpers.BytesToString(requestCtx.QueryArgs().Peek("access_token")); tokStr != "" {
-		SetAccessTokenCookieFastHttp(requestCtx, tokStr)
+		SetAccessTokenFastHttpCookie(requestCtx, tokStr)
 		return tokStr
 	}
 	return ""
@@ -117,7 +117,7 @@ func SetAccessTokenCookie(w http.ResponseWriter, tokenString string, opts ...boo
 	return w
 }
 
-func SetAccessTokenCookieFastHttp(requestCtx *fasthttp.RequestCtx, tokenString string, opts ...bool) {
+func SetAccessTokenFastHttpCookie(requestCtx *fasthttp.RequestCtx, tokenString string, opts ...bool) {
 	cookie := &fasthttp.Cookie{}
 	cookie.SetKey("access_token")
 	cookie.SetValue(tokenString)
