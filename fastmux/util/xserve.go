@@ -55,7 +55,6 @@ func XServe(requestCtx *fasthttp.RequestCtx) {
 	} else {
 		f, err := os.Open(publicLocalPath + string(filepath.Separator) + filepath.FromSlash(requestedFile))
 		defer f.Close()
-
 		requestedFile = strings.ToLower(requestedFile)
 
 		if err == nil {
