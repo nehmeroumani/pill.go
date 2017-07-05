@@ -14,7 +14,6 @@ func New() *Mux {
 func wrapHandler(h fasthttp.RequestHandler) fasthttptreemux.HandlerFunc {
 	return func(requestCtx *fasthttp.RequestCtx, params map[string]string) {
 		fasthttpcontext.Set(requestCtx, "params", params)
-		defer requestCtx.ResetBody()
 		fasthttpcontext.ClearHandler(h)(requestCtx)
 	}
 }
