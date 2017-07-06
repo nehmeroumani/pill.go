@@ -265,6 +265,13 @@ func (this *MultipleUpload) PathOfFile(fileName string, opts ...string) string {
 		}
 	}
 }
+func (this *MultipleUpload) AttachmentFileURI(fileName string, opts ...string) string {
+	if uploadToCloud {
+		return this.UrlOfFile(fileName, opts...)
+	} else {
+		return this.PathOfFile(fileName, opts...)
+	}
+}
 
 func generateRandomFileName(extension string) string {
 	randBytes := make([]byte, 16)
