@@ -104,24 +104,28 @@ func GetParam(r *http.Request, key string) string {
 }
 
 type GlobalRouter struct {
-	WebRouter   *Mux
-	APIRouter   *Mux
-	Environment string
-	DomainName  string
+	webRouter *Mux
+	apiRouter *Mux
+	apiDomainName string
+	apiPath   string
+}
+
+func NewGlobalRouter(WebRouter *Mux, APIRouter *Mux, APIDomainName string, APIPath string) *GlobalRouter {
+	return &GlobalRouter{webRouter: WebRouter, apiRouter: APIRouter, apiDomainName: strings.ToLower(strings.TrimSpace(APIDomainName)), apiPath: strings.ToLower(strings.TrimSpace(APIPath))}
 }
 
 func (this GlobalRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	if this.Environment == "production" {
-		if strings.ToLower(req.Host) == strings.ToLower("api."+this.DomainName) {
-			this.APIRouter.ServeHTTP(w, req)
+	if this.apiDomainName != "" {
+		if strings.ToLower(req.Host) == this.apiDomainName {
+			this.apiRouter.ServeHTTP(w, req)
 		} else {
-			this.WebRouter.ServeHTTP(w, req)
+			this.webRouter.ServeHTTP(w, req)
 		}
 	} else {
-		if strings.HasPrefix(strings.ToLower(req.URL.Path), "/api") {
-			this.APIRouter.ServeHTTP(w, req)
+		if strings.HasPrefix(strings.ToLower(req.URL.Path), this.apiPath) {
+			this.apiRouter.ServeHTTP(w, req)
 		} else {
-			this.WebRouter.ServeHTTP(w, req)
+			this.webRouter.ServeHTTP(w, req)
 		}
 	}
 }

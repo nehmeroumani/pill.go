@@ -97,24 +97,28 @@ func GetParam(requestCtx *fasthttp.RequestCtx, key string) string {
 }
 
 type GlobalRouter struct {
-	WebRouter   *Mux
-	APIRouter   *Mux
-	Environment string
-	DomainName  string
+	webRouter *Mux
+	apiRouter *Mux
+	apiDomainName string
+	apiPath   string
+}
+
+func NewGlobalRouter(WebRouter *Mux, APIRouter *Mux, APIDomainName string, APIPath string) *GlobalRouter {
+	return &GlobalRouter{webRouter: WebRouter, apiRouter: APIRouter, apiDomainName: strings.ToLower(strings.TrimSpace(APIDomainName)), apiPath: strings.ToLower(strings.TrimSpace(APIPath))}
 }
 
 func (this GlobalRouter) ServeHTTP(requestCtx *fasthttp.RequestCtx) {
-	if this.Environment == "production" {
-		if strings.ToLower(helpers.BytesToString(requestCtx.Host())) == strings.ToLower("api."+this.DomainName) {
-			this.APIRouter.ServeHTTP(requestCtx)
+	if this.apiDomainName == "" {
+		if strings.ToLower(helpers.BytesToString(requestCtx.Host())) == this.apiDomainName {
+			this.apiRouter.ServeHTTP(requestCtx)
 		} else {
-			this.WebRouter.ServeHTTP(requestCtx)
+			this.webRouter.ServeHTTP(requestCtx)
 		}
 	} else {
-		if strings.HasPrefix(strings.ToLower(helpers.BytesToString(requestCtx.Path())), "/api") {
-			this.APIRouter.ServeHTTP(requestCtx)
+		if strings.HasPrefix(strings.ToLower(helpers.BytesToString(requestCtx.Path())), this.apiPath) {
+			this.apiRouter.ServeHTTP(requestCtx)
 		} else {
-			this.WebRouter.ServeHTTP(requestCtx)
+			this.webRouter.ServeHTTP(requestCtx)
 		}
 	}
 }
