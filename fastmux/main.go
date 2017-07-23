@@ -97,10 +97,10 @@ func GetParam(requestCtx *fasthttp.RequestCtx, key string) string {
 }
 
 type GlobalRouter struct {
-	webRouter *Mux
-	apiRouter *Mux
+	webRouter     *Mux
+	apiRouter     *Mux
 	apiDomainName string
-	apiPath   string
+	apiPath       string
 }
 
 func NewGlobalRouter(WebRouter *Mux, APIRouter *Mux, APIDomainName string, APIPath string) *GlobalRouter {
@@ -108,7 +108,7 @@ func NewGlobalRouter(WebRouter *Mux, APIRouter *Mux, APIDomainName string, APIPa
 }
 
 func (this GlobalRouter) ServeHTTP(requestCtx *fasthttp.RequestCtx) {
-	if this.apiDomainName == "" {
+	if this.apiDomainName != "" {
 		if strings.ToLower(helpers.BytesToString(requestCtx.Host())) == this.apiDomainName {
 			this.apiRouter.ServeHTTP(requestCtx)
 		} else {
