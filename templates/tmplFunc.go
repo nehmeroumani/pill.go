@@ -629,3 +629,9 @@ func URLPath(u string) string {
 func YoutubeVideoID(url string) string {
 	return sanitize.YoutubeVideoID(url)
 }
+func IsSelectedNumVal(firstVal int32, secondVal int) string {
+	if firstVal == int32(secondVal) {
+		return "selected"
+	}
+	return ""
+}

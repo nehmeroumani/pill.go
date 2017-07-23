@@ -121,6 +121,7 @@ func RegisterTmplFunc() {
 	AddTmplFunc("Timestamp", Timestamp)
 	AddTmplFunc("URLPath", URLPath)
 	AddTmplFunc("YoutubeVideoID", YoutubeVideoID)
+	AddTmplFunc("IsSelectedNumVal", IsSelectedNumVal)
 }
 func GetTemplate(templateName string) *template.Template {
 	if Templates == nil {

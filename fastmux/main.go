@@ -7,8 +7,12 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func New() *Mux {
-	return &Mux{Router: fasthttptreemux.New()}
+func New(opts ...string) *Mux {
+	basePath := ""
+	if opts != nil && len(opts) > 0 {
+		basePath = opts[0]
+	}
+	return &Mux{Router: fasthttptreemux.New(), basePath: basePath}
 }
 
 func wrapHandler(h fasthttp.RequestHandler) fasthttptreemux.HandlerFunc {
@@ -19,33 +23,34 @@ func wrapHandler(h fasthttp.RequestHandler) fasthttptreemux.HandlerFunc {
 }
 
 type Mux struct {
-	Router *fasthttptreemux.TreeMux
-	Chain  fastchain.Chain
+	Router   *fasthttptreemux.TreeMux
+	Chain    fastchain.Chain
+	basePath string
 }
 
 func (this *Mux) Use(middlewares ...fastchain.Constructor) {
 	this.Chain = this.Chain.Append(middlewares...)
 }
 func (this *Mux) Get(p string) *route {
-	return &route{mux: this, pattern: p, method: "GET", chain: this.Chain}
+	return &route{mux: this, pattern: this.basePath + p, method: "GET", chain: this.Chain}
 }
 func (this *Mux) Post(p string) *route {
-	return &route{mux: this, pattern: p, method: "POST", chain: this.Chain}
+	return &route{mux: this, pattern: this.basePath + p, method: "POST", chain: this.Chain}
 }
 func (this *Mux) Put(p string) *route {
-	return &route{mux: this, pattern: p, method: "PUT", chain: this.Chain}
+	return &route{mux: this, pattern: this.basePath + p, method: "PUT", chain: this.Chain}
 }
 func (this *Mux) Patch(p string) *route {
-	return &route{mux: this, pattern: p, method: "PATCH", chain: this.Chain}
+	return &route{mux: this, pattern: this.basePath + p, method: "PATCH", chain: this.Chain}
 }
 func (this *Mux) Delete(p string) *route {
-	return &route{mux: this, pattern: p, method: "DELETE", chain: this.Chain}
+	return &route{mux: this, pattern: this.basePath + p, method: "DELETE", chain: this.Chain}
 }
 func (this *Mux) Head(p string) *route {
-	return &route{mux: this, pattern: p, method: "HEAD", chain: this.Chain}
+	return &route{mux: this, pattern: this.basePath + p, method: "HEAD", chain: this.Chain}
 }
 func (this *Mux) Options(p string) *route {
-	return &route{mux: this, pattern: p, method: "OPTIONS", chain: this.Chain}
+	return &route{mux: this, pattern: this.basePath + p, method: "OPTIONS", chain: this.Chain}
 }
 func (this *Mux) ServeHTTP(requestCtx *fasthttp.RequestCtx) {
 	this.Router.ServeHTTP(requestCtx)
