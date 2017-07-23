@@ -2,6 +2,7 @@ package mux
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/dimfeld/httptreemux"
 	"github.com/gorilla/context"
@@ -11,7 +12,9 @@ import (
 func New(opts ...string) *Mux {
 	basePath := ""
 	if opts != nil && len(opts) > 0 {
-		basePath = opts[0]
+		if opts[0] != "/" {
+			basePath = opts[0]
+		}
 	}
 	return &Mux{Router: httptreemux.New(), basePath: basePath}
 }
@@ -98,4 +101,27 @@ func GetParam(r *http.Request, key string) string {
 		}
 	}
 	return ""
+}
+
+type GlobalRouter struct {
+	WebRouter   *Mux
+	APIRouter   *Mux
+	Environment string
+	DomainName  string
+}
+
+func (this GlobalRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if this.Environment == "production" {
+		if strings.ToLower(req.Host) == strings.ToLower("api."+this.DomainName) {
+			this.APIRouter.ServeHTTP(w, req)
+		} else {
+			this.WebRouter.ServeHTTP(w, req)
+		}
+	} else {
+		if strings.HasPrefix(strings.ToLower(req.URL.Path), "/api") {
+			this.APIRouter.ServeHTTP(w, req)
+		} else {
+			this.WebRouter.ServeHTTP(w, req)
+		}
+	}
 }

@@ -1,16 +1,21 @@
 package fastmux
 
 import (
+	"strings"
+
 	"github.com/nehmeroumani/fastchain"
 	"github.com/nehmeroumani/fasthttpcontext"
 	"github.com/nehmeroumani/fasthttptreemux"
+	"github.com/nehmeroumani/pill.go/helpers"
 	"github.com/valyala/fasthttp"
 )
 
 func New(opts ...string) *Mux {
 	basePath := ""
 	if opts != nil && len(opts) > 0 {
-		basePath = opts[0]
+		if opts[0] != "/" {
+			basePath = opts[0]
+		}
 	}
 	return &Mux{Router: fasthttptreemux.New(), basePath: basePath}
 }
@@ -89,4 +94,27 @@ func GetParam(requestCtx *fasthttp.RequestCtx, key string) string {
 		}
 	}
 	return ""
+}
+
+type GlobalRouter struct {
+	WebRouter   *Mux
+	APIRouter   *Mux
+	Environment string
+	DomainName  string
+}
+
+func (this GlobalRouter) ServeHTTP(requestCtx *fasthttp.RequestCtx) {
+	if this.Environment == "production" {
+		if strings.ToLower(helpers.BytesToString(requestCtx.Host())) == strings.ToLower("api."+this.DomainName) {
+			this.APIRouter.ServeHTTP(requestCtx)
+		} else {
+			this.WebRouter.ServeHTTP(requestCtx)
+		}
+	} else {
+		if strings.HasPrefix(strings.ToLower(helpers.BytesToString(requestCtx.Path())), "/api") {
+			this.APIRouter.ServeHTTP(requestCtx)
+		} else {
+			this.WebRouter.ServeHTTP(requestCtx)
+		}
+	}
 }
