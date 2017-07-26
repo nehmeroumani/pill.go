@@ -11,46 +11,45 @@ import (
 	"time"
 )
 
-var publicLocalPath, publicCloudUrlPath, appVersion string
-var filesFromCloud bool
+var staticFilesPath, uploadsPath, appVersion string
+var staticFilesURLPath, uploadsURLPath string
+var staticFilesFromCloud, uploadsFromCloud bool
 var cacheTTL = 60 * 60 * 24 * 7
 
-func InitXServe(PublicLocalPath string, opts ...interface{}) {
-	publicLocalPath = filepath.FromSlash(PublicLocalPath)
-	filesFromCloud = false
-	if opts != nil && len(opts) == 1 {
-		cacheTTL = opts[0].(int)
-	} else {
-		if opts != nil {
-			if len(opts) > 0 {
-				publicCloudUrlPath = opts[0].(string)
-			}
-			if len(opts) > 1 {
-				filesFromCloud = opts[1].(bool)
-			}
-			if len(opts) > 2 {
-				appVersion = opts[2].(string)
-			}
-		}
-	}
+func InitXServe(StaticFilesPath string, StaticFilesURLPath string, StaticFilesFromCloud bool, UploadsPath string, UploadsURLPath string, UploadsFromCloud bool, AppVersion string) {
+	staticFilesPath = StaticFilesPath
+	staticFilesURLPath = StaticFilesURLPath
+	staticFilesFromCloud = StaticFilesFromCloud
+	uploadsPath = UploadsPath
+	uploadsURLPath = UploadsURLPath
+	uploadsFromCloud = UploadsFromCloud
+	appVersion = AppVersion
 }
 
-func XServe(w http.ResponseWriter, r *http.Request) {
+func StaticFilesServe(w http.ResponseWriter, r *http.Request) {
+	xServe(w, r, staticFilesPath, staticFilesURLPath, staticFilesFromCloud, true)
+}
+
+func UploadsServe(w http.ResponseWriter, r *http.Request) {
+	xServe(w, r, uploadsPath, uploadsURLPath, uploadsFromCloud, false)
+}
+func xServe(w http.ResponseWriter, r *http.Request, filesPath string, filesURLPath string, fromCloud bool, isStatic bool) {
 	defer r.Body.Close()
-	requestedFile := r.URL.Path[8:]
-	if filesFromCloud && publicCloudUrlPath != "" {
-		d := "http://www.example.com/"
-		u, err := url.Parse(d + requestedFile)
-		if err == nil {
-			if u.RawQuery != "" {
-				u.RawQuery += "&"
-			}
-			u.RawQuery += "app_version=" + url.QueryEscape(appVersion)
-			requestedFile = strings.Replace(u.String(), d, "", -1)
-		}
-		http.Redirect(w, r, publicCloudUrlPath+"/"+requestedFile, 307)
+	requestedFile := r.URL.Path
+	if isStatic {
+		requestedFile = requestedFile[len("/static"):]
 	} else {
-		f, err := os.Open(publicLocalPath + string(filepath.Separator) + filepath.FromSlash(requestedFile))
+		requestedFile = requestedFile[len("/uploads"):]
+	}
+	if fromCloud {
+		requestedFile += "?" + r.URL.RawQuery
+		if r.URL.RawQuery != "" {
+			requestedFile += "&"
+		}
+		requestedFile += "app_version=" + url.QueryEscape(appVersion)
+		http.Redirect(w, r, filesURLPath+requestedFile, 307)
+	} else {
+		f, err := os.Open(filesPath + filepath.FromSlash(requestedFile))
 		defer f.Close()
 
 		requestedFile = strings.ToLower(requestedFile)
