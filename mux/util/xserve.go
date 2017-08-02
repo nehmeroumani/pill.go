@@ -36,6 +36,9 @@ func UploadsServe(w http.ResponseWriter, r *http.Request) {
 func xServe(w http.ResponseWriter, r *http.Request, filesPath string, filesURLPath string, fromCloud bool, isStatic bool) {
 	defer r.Body.Close()
 	requestedFile := r.URL.Path
+	if strings.HasPrefix(requestedFile, "/public") {
+		requestedFile = requestedFile[len("/public"):]
+	}
 	if isStatic {
 		requestedFile = requestedFile[len("/static"):]
 	} else {
@@ -52,45 +55,46 @@ func xServe(w http.ResponseWriter, r *http.Request, filesPath string, filesURLPa
 		f, err := os.Open(filesPath + filepath.FromSlash(requestedFile))
 		defer f.Close()
 
-		requestedFile = strings.ToLower(requestedFile)
+		fileExtension := strings.ToLower(filepath.Ext(requestedFile))
 
 		if err == nil {
 			var contentType string
-			if strings.HasSuffix(requestedFile, ".js") {
+			switch fileExtension {
+			case ".js":
 				contentType = "text/javascript"
-			} else if strings.HasSuffix(requestedFile, ".css") {
+			case ".css":
 				contentType = "text/css"
-			} else if strings.HasSuffix(requestedFile, ".jpg") {
+			case ".jpg":
 				contentType = "image/jpg"
-			} else if strings.HasSuffix(requestedFile, ".png") {
+			case ".png":
 				contentType = "image/png"
-			} else if strings.HasSuffix(requestedFile, ".jpeg") {
+			case ".jpeg":
 				contentType = "image/jpeg"
-			} else if strings.HasSuffix(requestedFile, ".gif") {
+			case ".gif":
 				contentType = "image/gif"
-			} else if strings.HasSuffix(requestedFile, ".mp3") {
+			case ".mp3":
 				contentType = "audio/mpeg"
-			} else if strings.HasSuffix(requestedFile, ".ogg") {
+			case ".ogg":
 				contentType = "audio/ogg"
-			} else if strings.HasSuffix(requestedFile, ".woff") {
+			case ".woff":
 				contentType = "application/x-font-woff"
-			} else if strings.HasSuffix(requestedFile, ".ttf") {
+			case ".ttf":
 				contentType = "application/font-sfnt"
-			} else if strings.HasSuffix(requestedFile, ".svg") {
+			case ".svg":
 				contentType = "image/svg+xml"
-			} else if strings.HasSuffix(requestedFile, ".eot") {
+			case ".eot":
 				contentType = "application/vnd.ms-fontobject"
-			} else if strings.HasSuffix(requestedFile, ".pdf") {
+			case ".pdf":
 				contentType = "application/pdf"
-			} else if strings.HasSuffix(requestedFile, ".ipa") {
+			case ".ipa":
 				contentType = "application/octet-stream"
-			} else if strings.HasSuffix(requestedFile, ".html") {
+			case ".html":
 				contentType = "text/html"
-			} else if strings.HasSuffix(requestedFile, ".plist") {
+			case ".plist":
 				contentType = "application/x-plist"
-			} else if strings.HasSuffix(requestedFile, ".apk") {
+			case ".apk":
 				contentType = "application/vnd.android.package-archive"
-			} else {
+			default:
 				contentType = "text/plain"
 			}
 			w.Header().Set("Content-Type", contentType)
