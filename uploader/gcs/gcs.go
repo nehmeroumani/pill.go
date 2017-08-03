@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"cloud.google.com/go/storage"
 	"github.com/nehmeroumani/pill.go/clean"
@@ -119,6 +120,7 @@ func (this *Client) WriteObject(file io.Reader, path string) error {
 	if file != nil && path != "" {
 		if bErr := this.CreateBucket(this.PublicBucketName); bErr == nil {
 			ctx := context.Background()
+			path = strings.TrimPrefix(path, "/")
 			wc := this.gcsClient.Bucket(this.PublicBucketName).Object(path).NewWriter(ctx)
 			wc.ACL = []storage.ACLRule{{Entity: storage.AllUsers, Role: storage.RoleReader}}
 			if _, err := io.Copy(wc, file); err != nil {
