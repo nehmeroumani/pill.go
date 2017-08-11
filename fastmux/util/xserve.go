@@ -2,6 +2,7 @@ package util
 
 import (
 	"bufio"
+	"bytes"
 	"net/http"
 	"net/url"
 	"os"
@@ -56,8 +57,6 @@ func xServe(requestCtx *fasthttp.RequestCtx, filesPath string, filesURLPath stri
 		requestCtx.Redirect(filesURLPath+requestedFile, 307)
 	} else {
 		f, err := os.Open(filesPath + filepath.FromSlash(requestedFile))
-		defer f.Close()
-
 		fileExtension := strings.ToLower(filepath.Ext(requestedFile))
 
 		if err == nil {
@@ -112,19 +111,19 @@ func xServe(requestCtx *fasthttp.RequestCtx, filesPath string, filesURLPath stri
 						modifiedSinceTime = modifiedSinceTime.UTC()
 						if modifiedSinceTime.Equal(lastModifiedTime) {
 							requestCtx.SetStatusCode(304)
-							requestCtx.Write([]byte{})
+							requestCtx.Response.SetBodyStream(bytes.NewReader([]byte{}), 0)
 							cached = true
 						}
 					}
 				}
-			}
-			if !cached {
-				bufferedReader := bufio.NewReader(f)
-				bufferedReader.WriteTo(requestCtx.Response.BodyWriter())
+				if !cached {
+					buf := bufio.NewReader(f)
+					requestCtx.Response.SetBodyStream(buf, int(fileInfo.Size()))
+				}
 			}
 		} else {
 			requestCtx.SetStatusCode(404)
-			requestCtx.Write([]byte(http.StatusText(404)))
+			requestCtx.Response.SetBodyStream(bytes.NewReader([]byte(http.StatusText(404))), len([]byte(http.StatusText(404))))
 		}
 	}
 }
