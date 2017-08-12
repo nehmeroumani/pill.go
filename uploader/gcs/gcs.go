@@ -123,6 +123,7 @@ func (this *Client) WriteObject(file io.Reader, path string) error {
 			path = strings.TrimPrefix(path, "/")
 			wc := this.gcsClient.Bucket(this.PublicBucketName).Object(path).NewWriter(ctx)
 			wc.ACL = []storage.ACLRule{{Entity: storage.AllUsers, Role: storage.RoleReader}}
+			wc.CacheControl = "Cache-Control:public, max-age=15552000"
 			if _, err := io.Copy(wc, file); err != nil {
 				clean.Error(err)
 				return err
