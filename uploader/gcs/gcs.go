@@ -16,7 +16,8 @@ import (
 
 type Client struct {
 	// Project ID
-	ProjectID string
+	ProjectID     string
+	ProjectNumber string
 	// GCS Client
 	gcsClient        *storage.Client
 	PublicBucketName string
@@ -24,11 +25,12 @@ type Client struct {
 }
 
 var client *Client
-var jsonKeyPath, projectID string
+var jsonKeyPath, projectID, projectNumber string
 
-func Init(ProjectID, JSONKeyPath string) {
+func Init(ProjectID, ProjectNumber, JSONKeyPath string) {
 	projectID = ProjectID
 	jsonKeyPath = JSONKeyPath
+	projectNumber = ProjectNumber
 	client = GetClient()
 }
 
@@ -38,7 +40,7 @@ func GetClient() *Client {
 		os.Exit(0)
 	}
 	if client == nil {
-		client = &Client{ProjectID: projectID}
+		client = &Client{ProjectID: projectID, ProjectNumber: projectNumber}
 		client.PublicBucketName = projectID + "-public"
 		var err error
 		ctx := context.Background()
@@ -122,8 +124,8 @@ func (this *Client) WriteObject(file io.Reader, path string) error {
 			ctx := context.Background()
 			path = strings.TrimPrefix(path, "/")
 			wc := this.gcsClient.Bucket(this.PublicBucketName).Object(path).NewWriter(ctx)
-			wc.ACL = []storage.ACLRule{{Entity: storage.AllUsers, Role: storage.RoleReader}}
-			wc.CacheControl = "Cache-Control:public, max-age=15552000"
+			wc.ACL = []storage.ACLRule{{Entity: storage.AllUsers, Role: storage.RoleReader}, {Entity: storage.ACLEntity("project-owners-" + this.ProjectNumber), Role: storage.RoleOwner}, {Entity: storage.ACLEntity("project-editors-" + this.ProjectNumber), Role: storage.RoleOwner}}
+			wc.CacheControl = "public, max-age=15552000"
 			if _, err := io.Copy(wc, file); err != nil {
 				clean.Error(err)
 				return err
