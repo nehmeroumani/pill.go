@@ -18,7 +18,7 @@ import (
 var staticFilesPath, uploadsPath, appVersion string
 var staticFilesURLPath, uploadsURLPath string
 var staticFilesFromCloud, uploadsFromCloud bool
-var cacheTTL = 60 * 60 * 24 * 7
+var cacheTTL = 60 * 60 * 24 * 30 * 6
 
 func InitXServe(StaticFilesPath string, StaticFilesURLPath string, StaticFilesFromCloud bool, UploadsPath string, UploadsURLPath string, UploadsFromCloud bool, AppVersion string) {
 	staticFilesPath = StaticFilesPath
