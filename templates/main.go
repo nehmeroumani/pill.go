@@ -36,9 +36,12 @@ func compileTemplates(filePaths []string) (*template.Template, error) {
 		tmpl = tmpl.New(name)
 		b, err := ioutil.ReadFile(fp)
 		if err != nil {
-			return nil, err
+			clean.Error(err)
+		} else {
+			if _, err = tmpl.Parse(string(b)); err != nil {
+				clean.Error(err)
+			}
 		}
-		tmpl.Parse(string(b))
 	}
 	return tmpl, nil
 }
