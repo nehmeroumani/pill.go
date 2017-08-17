@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/nehmeroumani/pill.go/clean"
@@ -29,11 +30,11 @@ func compileTemplates(filePaths []string) (*template.Template, error) {
 		tmpl = tmpl.Delims(tmplDelims[0], tmplDelims[1])
 	}
 	tmpl = tmpl.Funcs(tmplFuncs)
-	for _, filePath := range filePaths {
-		name := filepath.Base(filePath)
+	tmplNameStartIndex := len(strings.TrimPrefix(templatesPath, "./")) + 1
+	for _, fp := range filePaths {
+		name := fp[tmplNameStartIndex:]
 		tmpl = tmpl.New(name)
-
-		b, err := ioutil.ReadFile(filePath)
+		b, err := ioutil.ReadFile(fp)
 		if err != nil {
 			return nil, err
 		}
@@ -44,19 +45,19 @@ func compileTemplates(filePaths []string) (*template.Template, error) {
 
 //It Read templates files and return it as a value of type Template
 func initializeTemplates() *template.Template {
-	var err error
-
-	templateFolder, _ := os.Open(templatesPath)
-	defer templateFolder.Close()
-
 	templatesPaths := []string{}
-	templatesPathsRaw, _ := templateFolder.Readdir(-1)
 
-	for _, file := range templatesPathsRaw {
-		if !file.IsDir() {
-			templatesPaths = append(templatesPaths, filepath.Join(templatesPath, file.Name()))
+	err := filepath.Walk(templatesPath, func(path string, info os.FileInfo, err error) error {
+		if strings.HasSuffix(path, ".html") {
+			templatesPaths = append(templatesPaths, path)
 		}
+		return nil
+	})
+
+	if err != nil {
+		panic(err)
 	}
+
 	var tmpl *template.Template
 	tmpl, err = compileTemplates(templatesPaths)
 	if err != nil {
