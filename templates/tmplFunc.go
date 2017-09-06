@@ -531,6 +531,7 @@ func StripTags(s string) string {
 }
 
 func IsCPPage(pageName string) bool {
+	pageName = strings.TrimSpace(pageName)
 	if pageName != "cp-login" && pageName != "" {
 		if len(pageName) > 3 {
 			if pageName[:3] == "cp-" {
@@ -542,6 +543,8 @@ func IsCPPage(pageName string) bool {
 }
 
 func IsActive(value1 string, value2 string, oneClass ...bool) string {
+	value1 = strings.TrimSpace(value1)
+	value2 = strings.TrimSpace(value2)
 	if value1 == value2 {
 		if oneClass != nil && len(oneClass) > 0 {
 			if oneClass[0] {
