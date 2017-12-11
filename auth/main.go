@@ -56,11 +56,12 @@ func GetJWTAuth() *JWTAuthentication {
 	return JWTAuth
 }
 
-func (this *JWTAuthentication) GenerateToken(userId int) (string, error) {
-	claims := &jwt.StandardClaims{}
+func (this *JWTAuthentication) GenerateToken(userId int, role string) (string, error) {
+	claims := &Claims{}
 	claims.ExpiresAt = time.Now().Add(time.Hour * tokenDuration).Unix()
 	claims.IssuedAt = time.Now().Unix()
 	claims.Subject = strconv.Itoa(userId)
+	claims.Role = role
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
 	tokenString, err := token.SignedString(this.privateKey)
 	if err != nil {

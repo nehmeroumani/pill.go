@@ -11,17 +11,15 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func IsAuthenticated(tokenString string, opts ...int64) (bool, int, int) {
+func IsAuthenticated(tokenString string, opts ...int64) (bool, int, string) {
 	if tokenString != "" && tokenString != "deleted" {
-		claims := &jwt.StandardClaims{}
+		claims := &Claims{}
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
 			return GetJWTAuth().publicKey, nil
 		})
 
-		if err != nil {
-			return false, 0, http.StatusInternalServerError
-		} else if !token.Valid {
-			return false, 0, http.StatusUnauthorized
+		if err != nil || !token.Valid {
+			return false, 0, ""
 		}
 		var lastPasswordUpdate int64
 		if opts != nil && len(opts) > 0 {
@@ -31,13 +29,12 @@ func IsAuthenticated(tokenString string, opts ...int64) (bool, int, int) {
 			if getTokenRemainingValidity(claims.ExpiresAt) > 0 {
 				var id int
 				if id, err = strconv.Atoi(claims.Subject); err == nil {
-					return true, id, http.StatusOK
+					return true, id, claims.Role
 				}
-				return false, 0, http.StatusInternalServerError
 			}
 		}
 	}
-	return false, 0, http.StatusUnauthorized
+	return false, 0, ""
 }
 
 func GetTokenFromRequest(w http.ResponseWriter, req *http.Request) string {
@@ -150,7 +147,7 @@ func SetAccessTokenFastHttpCookie(requestCtx *fasthttp.RequestCtx, tokenString s
 	requestCtx.Response.Header.SetCookie(cookie)
 }
 
-func RefreshAccessTokenCookie(w http.ResponseWriter, req *http.Request, userID int) http.ResponseWriter {
+func RefreshAccessTokenCookie(w http.ResponseWriter, req *http.Request, userID int, role string) http.ResponseWriter {
 	tokenWasRefurbished, _ := req.Cookie("token_was_refurbished")
 	refresh := true
 	if tokenWasRefurbished != nil {
@@ -162,7 +159,7 @@ func RefreshAccessTokenCookie(w http.ResponseWriter, req *http.Request, userID i
 		cookie, err := req.Cookie("access_token")
 		if err == nil {
 			jwtAuth := GetJWTAuth()
-			tokenString, tErr := jwtAuth.GenerateToken(userID)
+			tokenString, tErr := jwtAuth.GenerateToken(userID, role)
 			if tErr == nil {
 				tokenWasRefurbishedCookie := http.Cookie{}
 				tokenWasRefurbishedCookie.Name = "token_was_refurbished"
@@ -207,7 +204,7 @@ func RefreshAccessTokenCookie(w http.ResponseWriter, req *http.Request, userID i
 	return w
 }
 
-func RefreshAccessTokenFastHttpCookie(requestCtx *fasthttp.RequestCtx, userID int) {
+func RefreshAccessTokenFastHttpCookie(requestCtx *fasthttp.RequestCtx, userID int, role string) {
 	tokenWasRefurbished := requestCtx.Request.Header.Cookie("token_was_refurbished")
 	refresh := true
 	if tokenWasRefurbished != nil {
@@ -221,7 +218,7 @@ func RefreshAccessTokenFastHttpCookie(requestCtx *fasthttp.RequestCtx, userID in
 			cookie := &fasthttp.Cookie{}
 			cookie.SetKey("access_token")
 			jwtAuth := GetJWTAuth()
-			tokenString, tErr := jwtAuth.GenerateToken(userID)
+			tokenString, tErr := jwtAuth.GenerateToken(userID, role)
 			if tErr == nil {
 				tokenWasRefurbishedCookie := &fasthttp.Cookie{}
 				tokenWasRefurbishedCookie.SetKey("token_was_refurbished")
