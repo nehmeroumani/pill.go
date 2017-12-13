@@ -30,9 +30,10 @@ func compileTemplates(filePaths []string) (*template.Template, error) {
 		tmpl = tmpl.Delims(tmplDelims[0], tmplDelims[1])
 	}
 	tmpl = tmpl.Funcs(tmplFuncs)
-	tmplNameStartIndex := len(strings.TrimPrefix(templatesPath, "./")) + 1
+	tmplNameStartIndex := len(strings.TrimPrefix(strings.TrimPrefix(templatesPath, "./"), `.\`)) + 1
 	for _, fp := range filePaths {
 		name := fp[tmplNameStartIndex:]
+		name = strings.Replace(name, `\`, "/", -1)
 		tmpl = tmpl.New(name)
 		b, err := ioutil.ReadFile(fp)
 		if err != nil {
@@ -49,7 +50,6 @@ func compileTemplates(filePaths []string) (*template.Template, error) {
 //It Read templates files and return it as a value of type Template
 func initializeTemplates() *template.Template {
 	templatesPaths := []string{}
-
 	err := filepath.Walk(templatesPath, func(path string, info os.FileInfo, err error) error {
 		if strings.HasSuffix(path, ".html") {
 			templatesPaths = append(templatesPaths, path)
