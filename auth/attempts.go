@@ -9,7 +9,7 @@ type userAttempts struct {
 
 var usersAttempts map[int]userAttempts = map[int]userAttempts{}
 
-const maxAttemptsNumber int = 15
+const maxAttemptsNumber int = 10
 const attemptsDeltaTime float64 = 30
 
 func ResetUserAttempts(userId int) {
