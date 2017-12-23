@@ -51,7 +51,7 @@ func initializeTemplates() *template.Template {
 	templatesPaths := []string{}
 
 	err := filepath.Walk(templatesPath, func(path string, info os.FileInfo, err error) error {
-		if strings.HasSuffix(path, ".html") {
+		if strings.HasSuffix(path, ".html") || strings.HasSuffix(path, ".svg"){
 			templatesPaths = append(templatesPaths, path)
 		}
 		return nil
