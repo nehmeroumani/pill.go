@@ -80,6 +80,16 @@ func (this *Hub) GetUsers(usersList []int32) []*User {
 	return nil
 }
 
+func (this *Hub) GetAllUsers() []*User {
+	users := []*User{}
+	for userID := range this.onlineUsers {
+		if conns, ok := this.onlineUsers[userID]; ok {
+			users = append(users, conns...)
+		}
+	}
+	return users
+}
+
 func BroadcastMessage(payload []byte, users []*User) {
 	if users != nil {
 		for _, user := range users {
