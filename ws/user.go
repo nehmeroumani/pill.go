@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/nehmeroumani/pill.go/clean"
 )
 
 type User struct {
@@ -65,7 +64,6 @@ func (this *User) WritePump() {
 			this.ws.SetWriteDeadline(time.Now().Add(writeWait))
 			w, err := this.ws.NextWriter(websocket.TextMessage)
 			if err != nil {
-				clean.Error(err)
 				return
 			}
 			w.Write(message)
