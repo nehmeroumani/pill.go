@@ -33,6 +33,13 @@ type Mux struct {
 	basePath string
 }
 
+func (this *Mux) SetBasePath(bp string) {
+	bp = strings.TrimSpace(bp)
+	if bp != "/" {
+		this.basePath = bp
+	}
+}
+
 func (this *Mux) Use(middlewares ...fastchain.Constructor) {
 	this.Chain = this.Chain.Append(middlewares...)
 }
