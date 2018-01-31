@@ -40,6 +40,18 @@ func (this *Mux) SetBasePath(bp string) {
 	}
 }
 
+func (this *Mux) Path(bp string, h func(r *Mux)) {
+	r := &Mux{Router: this.Router}
+	bp = strings.TrimSpace(bp)
+	if bp != "/" {
+		r.basePath = bp
+	}
+	r.Chain = this.Chain.Clone()
+	if h != nil {
+		h(r)
+	}
+}
+
 func (this *Mux) Use(middlewares ...fastchain.Constructor) {
 	this.Chain = this.Chain.Append(middlewares...)
 }
