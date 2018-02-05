@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -33,7 +34,7 @@ var (
 	documentContentTypes = []string{"application/zip", "application/msword", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.wordprocessingml.template", "application/vnd.ms-word.document.macroEnabled.12", "application/vnd.ms-word.template.macroEnabled.12"}
 
 	svgExtensions   = []string{".svg", ".svgz"}
-	svgContentTypes = []string{"image/svg+xml", "text/xml", "text/xml; charset=utf-8"}
+	svgContentTypes = []string{"image/svg+xml", "text/xml", "text/xml; charset=utf-8", "text/plain; charset=utf-8"}
 
 	baseLocalUploadPath, baseCloudUploadPath, baseLocalUploadUrlPath, baseCloudUploadUrlPath string
 	uploadToCloud                                                                            bool
