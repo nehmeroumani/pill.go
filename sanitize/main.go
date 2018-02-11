@@ -122,6 +122,8 @@ var (
 	dots = regexp.MustCompile(`[\.]+`)
 
 	spaces = regexp.MustCompile(`[ ]+`)
+
+	illegalName = regexp.MustCompile(`[^\p{L}\d\_\.\-\s&=+':!?,]`)
 )
 
 // cleanString replaces separators with - and removes characters listed in the regexp provided from string.
@@ -149,7 +151,16 @@ func String(s string, separator string, r *regexp.Regexp) string {
 }
 
 func Name(s string) string {
-	return strings.TrimSpace(spaces.ReplaceAllString(StripTags(s), " "))
+	s = StripTags(s)
+	// Remove any trailing space to avoid ending on -
+	s = strings.Trim(s, " ")
+
+	// Remove all other unrecognised characters - NB we do allow any printable characters
+	s = illegalName.ReplaceAllString(s, "")
+
+	// Remove any multiple separator caused by replacements above
+	s = spaces.ReplaceAllString(s, " ")
+	return s
 }
 
 func Time(h int, m int, pmOrAm string) (bool, float64) {
