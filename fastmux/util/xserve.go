@@ -39,7 +39,6 @@ func InitXServe(StaticFilesPath string, StaticFilesURLPath string, StaticFilesFr
 		IndexNames:           []string{"index.html"},
 		Compress:             true,
 		AcceptByteRange:      true,
-		CacheDuration:        cacheTTL,
 		CompressedFileSuffix: ".gz",
 		PathRewrite: fasthttp.PathRewriteFunc(func(requestCtx *fasthttp.RequestCtx) []byte {
 			requestedFile := helpers.BytesToString(requestCtx.Path())
@@ -57,7 +56,6 @@ func InitXServe(StaticFilesPath string, StaticFilesURLPath string, StaticFilesFr
 		GenerateIndexPages:   generateIndexPages,
 		Compress:             true,
 		AcceptByteRange:      true,
-		CacheDuration:        cacheTTL,
 		CompressedFileSuffix: ".gz",
 		PathRewrite: fasthttp.PathRewriteFunc(func(requestCtx *fasthttp.RequestCtx) []byte {
 			requestedFile := helpers.BytesToString(requestCtx.Path())
@@ -104,6 +102,7 @@ func xServe(requestCtx *fasthttp.RequestCtx, filesPath string, filesURLPath stri
 		if infoErr != nil {
 			requestCtx.Redirect("/404", 307)
 		} else {
+			requestCtx.Response.Header.Set("Cache-Control", "public, max-age="+strconv.FormatInt(int64(cacheTTL), 10))
 			if requestCtx.IsHead() && !fileInfo.IsDir() {
 				fileExtension := strings.ToLower(filepath.Ext(requestedFile))
 				if err == nil {
