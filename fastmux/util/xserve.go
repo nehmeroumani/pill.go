@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/nehmeroumani/pill.go/helpers"
 	"github.com/valyala/fasthttp"
@@ -17,7 +16,7 @@ var (
 	staticFilesPath, uploadsPath, appVersion string
 	staticFilesURLPath, uploadsURLPath       string
 	staticFilesFromCloud, uploadsFromCloud   bool
-	cacheTTL                                 = time.Second * 60 * 60 * 24 * 30 * 6
+	cacheTTL                                 int64 = 60 * 60 * 24 * 30 * 6
 	fsUploadsHandler, fsStaticFilesHandler   fasthttp.RequestHandler
 )
 
@@ -102,7 +101,7 @@ func xServe(requestCtx *fasthttp.RequestCtx, filesPath string, filesURLPath stri
 		if infoErr != nil {
 			requestCtx.Redirect("/404", 307)
 		} else {
-			requestCtx.Response.Header.Set("Cache-Control", "public, max-age="+strconv.FormatInt(int64(cacheTTL), 10))
+			requestCtx.Response.Header.Set("Cache-Control", "public, max-age="+strconv.FormatInt(cacheTTL, 10))
 			if requestCtx.IsHead() && !fileInfo.IsDir() {
 				fileExtension := strings.ToLower(filepath.Ext(requestedFile))
 				if err == nil {
