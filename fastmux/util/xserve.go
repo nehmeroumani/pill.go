@@ -160,7 +160,7 @@ func xServe(requestCtx *fasthttp.RequestCtx, filesPath string, filesURLPath stri
 					fileSize := fileInfo.Size()
 					requestCtx.Response.Header.Set("Content-Length", strconv.FormatInt(fileSize, 10))
 					requestCtx.Response.Header.Set("Accept-Ranges", "bytes")
-					requestCtx.SetStatusCode(302)
+					requestCtx.SetStatusCode(304)
 					requestCtx.Write([]byte{})
 				}
 			} else {
