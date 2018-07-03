@@ -7,16 +7,19 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/nehmeroumani/pill.go/helpers"
 	"github.com/valyala/fasthttp"
 )
 
-var staticFilesPath, uploadsPath, appVersion string
-var staticFilesURLPath, uploadsURLPath string
-var staticFilesFromCloud, uploadsFromCloud bool
-var cacheTTL = 60 * 60 * 24 * 30 * 6
-var fsUploadsHandler, fsStaticFilesHandler fasthttp.RequestHandler
+var (
+	staticFilesPath, uploadsPath, appVersion string
+	staticFilesURLPath, uploadsURLPath       string
+	staticFilesFromCloud, uploadsFromCloud   bool
+	cacheTTL                                 = time.Second * 60 * 60 * 24 * 30 * 6
+	fsUploadsHandler, fsStaticFilesHandler   fasthttp.RequestHandler
+)
 
 func InitXServe(StaticFilesPath string, StaticFilesURLPath string, StaticFilesFromCloud bool, UploadsPath string, UploadsURLPath string, UploadsFromCloud bool, AppVersion string, opts ...bool) {
 	staticFilesPath = StaticFilesPath
@@ -36,6 +39,7 @@ func InitXServe(StaticFilesPath string, StaticFilesURLPath string, StaticFilesFr
 		IndexNames:           []string{"index.html"},
 		Compress:             true,
 		AcceptByteRange:      true,
+		CacheDuration:        cacheTTL,
 		CompressedFileSuffix: ".gz",
 		PathRewrite: fasthttp.PathRewriteFunc(func(requestCtx *fasthttp.RequestCtx) []byte {
 			requestedFile := helpers.BytesToString(requestCtx.Path())
@@ -53,6 +57,7 @@ func InitXServe(StaticFilesPath string, StaticFilesURLPath string, StaticFilesFr
 		GenerateIndexPages:   generateIndexPages,
 		Compress:             true,
 		AcceptByteRange:      true,
+		CacheDuration:        cacheTTL,
 		CompressedFileSuffix: ".gz",
 		PathRewrite: fasthttp.PathRewriteFunc(func(requestCtx *fasthttp.RequestCtx) []byte {
 			requestedFile := helpers.BytesToString(requestCtx.Path())
@@ -157,6 +162,7 @@ func xServe(requestCtx *fasthttp.RequestCtx, filesPath string, filesURLPath stri
 					fileSize := fileInfo.Size()
 					requestCtx.Response.Header.Set("Content-Length", strconv.FormatInt(fileSize, 10))
 					requestCtx.Response.Header.Set("Accept-Ranges", "bytes")
+					requestCtx.SetStatusCode(302)
 					requestCtx.Write([]byte{})
 				}
 			} else {
