@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/dancannon/gorethink"
 	"github.com/fatih/color"
 	"github.com/jackc/pgx"
+	gorethink "gopkg.in/gorethink/gorethink.v3"
 )
 
 func Error(err error) {
