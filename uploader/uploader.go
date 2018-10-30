@@ -35,18 +35,19 @@ var (
 	svgExtensions   = []string{".svg", ".svgz"}
 	svgContentTypes = []string{"image/svg+xml", "text/xml", "text/xml; charset=utf-8", "text/plain; charset=utf-8"}
 
-	baseLocalUploadPath, baseCloudUploadPath, baseLocalUploadUrlPath, baseCloudUploadUrlPath string
-	uploadToCloud                                                                            bool
+	uploadHost, baseLocalUploadDirPath, baseCloudUploadDirPath, baseLocalUploadUrlPath, baseCloudUploadUrlPath string
+	uploadToCloud                                                                                              bool
 )
 
-func Init(BaseUploadPath string, BaseUploadUrlPath string, UploadToCloud bool, imgSizes map[string]map[string][]uint) {
+func Init(UploadHost string, BaseUploadDirPath string, BaseUploadUrlPath string, UploadToCloud bool, imgSizes map[string]map[string][]uint) {
+	uploadHost = UploadHost
 	imageSizes = imgSizes
 	if !UploadToCloud {
-		baseLocalUploadPath = filepath.FromSlash(BaseUploadPath)
+		baseLocalUploadDirPath = filepath.FromSlash(BaseUploadDirPath)
 		baseLocalUploadUrlPath = BaseUploadUrlPath
 	} else {
 		baseCloudUploadUrlPath = BaseUploadUrlPath
-		baseCloudUploadPath = filepath.FromSlash(BaseUploadPath)
+		baseCloudUploadDirPath = filepath.FromSlash(BaseUploadDirPath)
 	}
 	uploadToCloud = UploadToCloud
 }
@@ -57,8 +58,8 @@ type MultipleUpload struct {
 	FileType           string
 	ImageSizes         []string
 	ImageCategory      string
-	localUploadPath    string
-	cloudUploadPath    string
+	localUploadDirPath string
+	cloudUploadDirPath string
 	localUploadUrlPath string
 	cloudUploadUrlPath string
 	WithCrop           bool
@@ -163,8 +164,8 @@ func (this *MultipleUpload) UploadOneFile(fh *multipart.FileHeader, uploadedFile
 				return
 			}
 		} else {
-			if ok, pathErr := CreateFolderPath(this.localUploadPath); ok {
-				out, err := os.Create(filepath.Join(this.localUploadPath, randomFileName))
+			if ok, pathErr := CreateFolderPath(this.localUploadDirPath); ok {
+				out, err := os.Create(filepath.Join(this.localUploadDirPath, randomFileName))
 				defer out.Close()
 				if err != nil {
 					err = errors.New("Unable to create the file for writing. Check your write access privilege : " + err.Error())
@@ -187,9 +188,9 @@ func (this *MultipleUpload) UploadOneFile(fh *multipart.FileHeader, uploadedFile
 				}
 				if fileTypeName == "image" && this.ImageSizes != nil {
 					if this.WithCrop {
-						izero.ResizeImgWithCroping(file, randomFileName, fileType, this.ImgCategoryTargetSizes(), this.LocalUploadPath())
+						izero.ResizeImgWithCroping(file, randomFileName, fileType, this.ImgCategoryTargetSizes(), this.LocalUploadDirPath())
 					} else {
-						izero.ResizeImgWithoutCroping(file, randomFileName, fileType, this.ImgCategoryTargetSizes(), this.LocalUploadPath(), this.BackgroundColor)
+						izero.ResizeImgWithoutCroping(file, randomFileName, fileType, this.ImgCategoryTargetSizes(), this.LocalUploadDirPath(), this.BackgroundColor)
 					}
 				}
 				*uploadedFilesNames = append(*uploadedFilesNames, randomFileName)
@@ -219,20 +220,20 @@ func (this *MultipleUpload) ImgCategoryTargetSizes() map[string][]uint {
 
 func (this *MultipleUpload) SetLocalUploadDir(localDir string) {
 	localDir = filepath.FromSlash(localDir)
-	this.localUploadPath = filepath.Join(baseLocalUploadPath, localDir)
+	this.localUploadDirPath = filepath.Join(baseLocalUploadDirPath, localDir)
 }
 
-func (this *MultipleUpload) LocalUploadPath() string {
-	return this.localUploadPath
+func (this *MultipleUpload) LocalUploadDirPath() string {
+	return this.localUploadDirPath
 }
 
 func (this *MultipleUpload) SetCloudUploadDir(cloudDir string) {
 	cloudDir = filepath.FromSlash(cloudDir)
-	this.cloudUploadPath = filepath.Join(baseCloudUploadPath, cloudDir)
+	this.cloudUploadDirPath = filepath.Join(baseCloudUploadDirPath, cloudDir)
 }
 
-func (this *MultipleUpload) CloudUploadPath() string {
-	return this.cloudUploadPath
+func (this *MultipleUpload) CloudUploadDirPath() string {
+	return this.cloudUploadDirPath
 }
 
 func (this *MultipleUpload) SetUploadDir(dir string) {
@@ -249,11 +250,11 @@ func (this *MultipleUpload) SetUploadDir(dir string) {
 	}
 }
 
-func (this *MultipleUpload) UploadPath() string {
+func (this *MultipleUpload) UploadDirPath() string {
 	if uploadToCloud {
-		return this.cloudUploadPath
+		return this.cloudUploadDirPath
 	} else {
-		return this.localUploadPath
+		return this.localUploadDirPath
 	}
 }
 
@@ -271,18 +272,16 @@ func (this *MultipleUpload) UrlOfFile(fileName string, opts ...string) string {
 	}
 	if uploadToCloud {
 		if sizeName != "" && sizeName != "original" {
-			return this.cloudUploadUrlPath + "/" + sizeName + "/" + fileName
-		} else {
-			return this.cloudUploadUrlPath + "/" + fileName
+			return uploadHost + this.cloudUploadUrlPath + "/" + sizeName + "/" + fileName
 		}
-	} else {
-		if sizeName != "" && sizeName != "original" {
-			return this.localUploadUrlPath + "/" + sizeName + "/" + fileName
-		} else {
-			return this.localUploadUrlPath + "/" + fileName
-		}
+		return uploadHost + this.cloudUploadUrlPath + "/" + fileName
 	}
+	if sizeName != "" && sizeName != "original" {
+		return uploadHost + this.localUploadUrlPath + "/" + sizeName + "/" + fileName
+	}
+	return uploadHost + this.localUploadUrlPath + "/" + fileName
 }
+
 func (this *MultipleUpload) PathOfFile(fileName string, opts ...string) string {
 	var sizeName string
 	if opts != nil && len(opts) > 0 {
@@ -290,18 +289,16 @@ func (this *MultipleUpload) PathOfFile(fileName string, opts ...string) string {
 	}
 	if uploadToCloud {
 		if sizeName != "" && sizeName != "original" {
-			return filepath.Join(this.cloudUploadPath, sizeName, fileName)
-		} else {
-			return filepath.Join(this.cloudUploadPath, fileName)
+			return filepath.Join(this.cloudUploadDirPath, sizeName, fileName)
 		}
-	} else {
-		if sizeName != "" && sizeName != "original" {
-			return filepath.Join(this.localUploadPath, sizeName, fileName)
-		} else {
-			return filepath.Join(this.localUploadPath, fileName)
-		}
+		return filepath.Join(this.cloudUploadDirPath, fileName)
 	}
+	if sizeName != "" && sizeName != "original" {
+		return filepath.Join(this.localUploadDirPath, sizeName, fileName)
+	}
+	return filepath.Join(this.localUploadDirPath, fileName)
 }
+
 func (this *MultipleUpload) AttachmentFileURI(fileName string, opts ...string) string {
 	if uploadToCloud {
 		return this.UrlOfFile(fileName, opts...)
@@ -400,7 +397,6 @@ func isValidFileType(requiredFileTypesRaw string, fileData []byte, fileExtension
 			break
 		}
 	}
-	//fmt.Println(isValidContentType, isValidExtension, fileType, fileTypeName)
 	return isValidContentType && isValidExtension, fileType, fileTypeName
 }
 
