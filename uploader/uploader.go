@@ -35,12 +35,11 @@ var (
 	svgExtensions   = []string{".svg", ".svgz"}
 	svgContentTypes = []string{"image/svg+xml", "text/xml", "text/xml; charset=utf-8", "text/plain; charset=utf-8"}
 
-	uploadHost, baseLocalUploadDirPath, baseCloudUploadDirPath, baseLocalUploadUrlPath, baseCloudUploadUrlPath string
-	uploadToCloud                                                                                              bool
+	baseLocalUploadDirPath, baseCloudUploadDirPath, baseLocalUploadUrlPath, baseCloudUploadUrlPath string
+	uploadToCloud                                                                                  bool
 )
 
-func Init(UploadHost string, BaseUploadDirPath string, BaseUploadUrlPath string, UploadToCloud bool, imgSizes map[string]map[string][]uint) {
-	uploadHost = UploadHost
+func Init(BaseUploadDirPath string, BaseUploadUrlPath string, UploadToCloud bool, imgSizes map[string]map[string][]uint) {
 	imageSizes = imgSizes
 	if !UploadToCloud {
 		baseLocalUploadDirPath = filepath.FromSlash(BaseUploadDirPath)
@@ -272,14 +271,14 @@ func (this *MultipleUpload) UrlOfFile(fileName string, opts ...string) string {
 	}
 	if uploadToCloud {
 		if sizeName != "" && sizeName != "original" {
-			return uploadHost + this.cloudUploadUrlPath + "/" + sizeName + "/" + fileName
+			return this.cloudUploadUrlPath + "/" + sizeName + "/" + fileName
 		}
-		return uploadHost + this.cloudUploadUrlPath + "/" + fileName
+		return this.cloudUploadUrlPath + "/" + fileName
 	}
 	if sizeName != "" && sizeName != "original" {
-		return uploadHost + this.localUploadUrlPath + "/" + sizeName + "/" + fileName
+		return this.localUploadUrlPath + "/" + sizeName + "/" + fileName
 	}
-	return uploadHost + this.localUploadUrlPath + "/" + fileName
+	return this.localUploadUrlPath + "/" + fileName
 }
 
 func (this *MultipleUpload) PathOfFile(fileName string, opts ...string) string {
