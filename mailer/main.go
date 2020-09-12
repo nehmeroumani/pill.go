@@ -11,7 +11,7 @@ import (
 	"github.com/nehmeroumani/pill.go/templates"
 	"github.com/parnurzeal/gorequest"
 
-	"gopkg.in/gomail.v2"
+	gomail "gopkg.in/gomail.v2"
 )
 
 //MAILER CONFIGURATIONS

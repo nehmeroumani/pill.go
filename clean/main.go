@@ -9,7 +9,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/jackc/pgx"
-	gorethink "gopkg.in/gorethink/gorethink.v3"
+	gorethink "github.com/rethinkdb/rethinkdb-go"
 )
 
 func Error(err error) {
