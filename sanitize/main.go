@@ -7,6 +7,18 @@ import (
 	"strings"
 )
 
+var (
+	RegexNotPhoneNumber = regexp.MustCompile(`[^0-9\+]`)
+)
+
+func PhoneNumber(p string) string {
+	p = RegexNotPhoneNumber.ReplaceAllString(p, "")
+	if p[0] != '+' {
+		p = "+" + p
+	}
+	return p
+}
+
 func Username(str string, withoutSeperators ...bool) string {
 	if withoutSeperators != nil && len(withoutSeperators) > 0 {
 		if withoutSeperators[0] {
